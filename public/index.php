@@ -132,16 +132,11 @@ $router->group('', function (Router $router) {
     $router->post('/profile', [\App\Controllers\Web\ProfileController::class, 'update']);
     $router->get('/settings', [\App\Controllers\Web\SettingsController::class, 'index'])->name('settings');
     $router->post('/settings', [\App\Controllers\Web\SettingsController::class, 'update']);
-    $router->get('/workspace', function (Request $req, Response $res) {
-        $res->status(200)->view('workspace.index', [
-            'title' => 'Workspace - FORT',
-            'activeNav' => 'workspace',
-            'user' => [
-                'name' => $_SESSION['user_name'] ?? 'User',
-            ],
-            'isAdmin' => $_SESSION['user_is_admin'] ?? false,
-        ]);
-    });
+    $router->get('/workspace', [\App\Controllers\Web\WorkspaceController::class, 'index'])->name('workspace');
+    $router->post('/workspace/create', [\App\Controllers\Web\WorkspaceController::class, 'create']);
+    $router->post('/workspace/switch', [\App\Controllers\Web\WorkspaceController::class, 'switch']);
+    $router->post('/workspace/invite', [\App\Controllers\Web\WorkspaceController::class, 'inviteMember']);
+    $router->post('/workspace/remove-member', [\App\Controllers\Web\WorkspaceController::class, 'removeMember']);
 }, [\App\Middleware\AuthMiddleware::class]);
 
 $router->group('', function (Router $router) {
