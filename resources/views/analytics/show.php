@@ -3,138 +3,151 @@
 <?php $this->section('content'); ?>
 <div class="analytics-container">
   <div class="page-header">
-    <div class="page-header-row">
+    <div class="page-header-row" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
       <div>
-        <a href="/analytics" class="back-link">&larr; Back to Analytics</a>
+        <a href="/analytics" class="back-link" style="font-size:0.875rem; color:var(--text-secondary); text-decoration:none; display:inline-flex; align-items:center; gap:0.25rem; margin-bottom:0.5rem;">&larr; Back to Analytics</a>
         <h1 class="page-title">Link Analytics</h1>
         <?php if ($stats['link']): ?>
-        <p class="page-subtitle">
+        <p class="page-subtitle text-muted" style="margin-top:0.25rem;">
           <strong>/<?= htmlspecialchars($stats['link']['slug'], ENT_QUOTES, 'UTF-8') ?></strong>
-          &rarr; <?= htmlspecialchars($stats['link']['original_url'], ENT_QUOTES, 'UTF-8') ?>
+          &rarr; <span style="word-break:break-all;"><?= htmlspecialchars($stats['link']['original_url'], ENT_QUOTES, 'UTF-8') ?></span>
         </p>
         <?php endif; ?>
       </div>
-      <div class="page-actions">
+      <div class="page-actions" style="display:flex; gap:0.5rem;">
         <button class="btn btn-outline" onclick="exportLinkAnalytics('csv')">CSV</button>
         <button class="btn btn-outline" onclick="exportLinkAnalytics('json')">JSON</button>
       </div>
     </div>
   </div>
 
-  <form method="GET" action="/analytics/<?= $linkId ?>" class="analytics-filters">
-    <div class="filter-group">
-      <label for="start_date">From</label>
-      <input type="date" id="start_date" name="start_date" value="<?= htmlspecialchars($startDate, ENT_QUOTES, 'UTF-8') ?>">
+  <form method="GET" action="/analytics/<?= $linkId ?>" class="analytics-filters" style="display:flex; gap:1.5rem; align-items:flex-end; margin-bottom:2rem; flex-wrap:wrap;">
+    <div class="filter-group" style="margin:0; display:flex; flex-direction:column; gap:0.5rem;">
+      <label for="start_date" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; color:var(--text-secondary);">From</label>
+      <input type="date" id="start_date" name="start_date" value="<?= htmlspecialchars($startDate, ENT_QUOTES, 'UTF-8') ?>" class="form-control" style="padding:0.45rem 0.75rem; border-radius:var(--radius); border:1px solid var(--border-color); background:var(--bg-primary); color:var(--text-primary);">
     </div>
-    <div class="filter-group">
-      <label for="end_date">To</label>
-      <input type="date" id="end_date" name="end_date" value="<?= htmlspecialchars($endDate, ENT_QUOTES, 'UTF-8') ?>">
+    <div class="filter-group" style="margin:0; display:flex; flex-direction:column; gap:0.5rem;">
+      <label for="end_date" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; color:var(--text-secondary);">To</label>
+      <input type="date" id="end_date" name="end_date" value="<?= htmlspecialchars($endDate, ENT_QUOTES, 'UTF-8') ?>" class="form-control" style="padding:0.45rem 0.75rem; border-radius:var(--radius); border:1px solid var(--border-color); background:var(--bg-primary); color:var(--text-primary);">
     </div>
-    <button type="submit" class="btn btn-primary">Apply</button>
+    <button type="submit" class="btn btn-primary" style="padding:0.525rem 1.25rem;">Apply</button>
   </form>
 
-  <div class="stats-cards">
-    <div class="stat-card">
-      <div class="stat-value"><?= number_format($stats['total_clicks'] ?? 0) ?></div>
+  <div class="bento-grid">
+    <!-- Stat 1: Total Clicks -->
+    <div class="bento-card bento-col-4">
       <div class="stat-label">Total Clicks</div>
+      <div class="stat-value"><?= number_format($stats['total_clicks'] ?? 0) ?></div>
     </div>
-    <div class="stat-card">
-      <div class="stat-value"><?= number_format($stats['unique_clicks'] ?? 0) ?></div>
-      <div class="stat-label">Unique Clicks</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value"><?= number_format($stats['countries'] ?? 0) ?></div>
-      <div class="stat-label">Countries</div>
-    </div>
-  </div>
 
-  <div class="charts-grid">
-    <div class="chart-card full-width">
-      <h3 class="chart-title">Clicks Over Time</h3>
-      <div class="chart-wrapper">
+    <!-- Stat 2: Unique Clicks -->
+    <div class="bento-card bento-col-4">
+      <div class="stat-label">Unique Clicks</div>
+      <div class="stat-value"><?= number_format($stats['unique_clicks'] ?? 0) ?></div>
+    </div>
+
+    <!-- Stat 3: Countries -->
+    <div class="bento-card bento-col-4">
+      <div class="stat-label">Countries</div>
+      <div class="stat-value"><?= number_format($stats['countries'] ?? 0) ?></div>
+    </div>
+
+    <!-- Clicks Over Time -->
+    <div class="bento-card bento-col-12 bento-row-3" style="min-height:350px;">
+      <h3 class="card-title" style="margin-bottom:1.5rem; font-size:1.05rem; font-weight:600;">Clicks Over Time</h3>
+      <div style="flex-grow:1; position:relative; min-height:220px;">
         <canvas id="chart-timeseries"></canvas>
       </div>
     </div>
 
-    <div class="chart-card">
-      <h3 class="chart-title">By Country</h3>
-      <div class="chart-wrapper">
+    <!-- By Country -->
+    <div class="bento-card bento-col-4 bento-row-3" style="min-height:320px;">
+      <h3 class="card-title" style="margin-bottom:1.5rem; font-size:1.05rem; font-weight:600;">By Country</h3>
+      <div style="flex-grow:1; position:relative; min-height:200px;">
         <canvas id="chart-country"></canvas>
       </div>
     </div>
 
-    <div class="chart-card">
-      <h3 class="chart-title">By Device</h3>
-      <div class="chart-wrapper">
+    <!-- By Device -->
+    <div class="bento-card bento-col-4 bento-row-3" style="min-height:320px;">
+      <h3 class="card-title" style="margin-bottom:1.5rem; font-size:1.05rem; font-weight:600;">By Device</h3>
+      <div style="flex-grow:1; position:relative; min-height:200px;">
         <canvas id="chart-device"></canvas>
       </div>
     </div>
 
-    <div class="chart-card">
-      <h3 class="chart-title">By Browser</h3>
-      <div class="chart-wrapper">
+    <!-- By Browser -->
+    <div class="bento-card bento-col-4 bento-row-3" style="min-height:320px;">
+      <h3 class="card-title" style="margin-bottom:1.5rem; font-size:1.05rem; font-weight:600;">By Browser</h3>
+      <div style="flex-grow:1; position:relative; min-height:200px;">
         <canvas id="chart-browser"></canvas>
       </div>
     </div>
 
-    <div class="chart-card">
-      <h3 class="chart-title">By Operating System</h3>
-      <div class="chart-wrapper">
+    <!-- By OS -->
+    <div class="bento-card bento-col-6 bento-row-3" style="min-height:320px;">
+      <h3 class="card-title" style="margin-bottom:1.5rem; font-size:1.05rem; font-weight:600;">By Operating System</h3>
+      <div style="flex-grow:1; position:relative; min-height:200px;">
         <canvas id="chart-os"></canvas>
       </div>
     </div>
 
-    <div class="chart-card">
-      <h3 class="chart-title">Top Referrers</h3>
-      <div class="chart-wrapper">
+    <!-- Top Referrers -->
+    <div class="bento-card bento-col-6 bento-row-3" style="min-height:320px;">
+      <h3 class="card-title" style="margin-bottom:1.5rem; font-size:1.05rem; font-weight:600;">Top Referrers</h3>
+      <div style="flex-grow:1; position:relative; min-height:200px;">
         <canvas id="chart-referrer"></canvas>
       </div>
     </div>
-  </div>
 
-  <div class="map-card">
-    <h3 class="map-title">Click Locations</h3>
-    <div id="geo-map" class="map-placeholder">
-      <p>Geolocation map visualization available with a map library integration (Leaflet/Google Maps).</p>
+    <!-- Map Visualization -->
+    <div class="bento-card bento-col-12" style="min-height:200px; display:flex; flex-direction:column; justify-content:center;">
+      <h3 class="card-title" style="margin-bottom:1.5rem; font-size:1.05rem; font-weight:600;">Click Locations</h3>
+      <div id="geo-map" style="flex-grow:1; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:var(--radius); display:flex; align-items:center; justify-content:center; padding:2rem;">
+        <p class="text-muted" style="font-size:0.875rem;">Geolocation map visualization available with a map library integration (Leaflet/Google Maps).</p>
+      </div>
     </div>
-  </div>
 
-  <div class="table-card">
-    <div class="table-header">
-      <h3 class="table-title">Recent Clicks</h3>
-      <span class="badge badge-live" id="live-indicator">Live</span>
-    </div>
-    <div class="table-responsive">
-      <table class="table" id="recent-clicks-table">
-        <thead>
-          <tr>
-            <th>Time</th>
-            <th>Country</th>
-            <th>City</th>
-            <th>Device</th>
-            <th>Browser</th>
-            <th>OS</th>
-            <th>Referrer</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php if (!empty($stats['recent_clicks'])): ?>
-          <?php foreach ($stats['recent_clicks'] as $click): ?>
-          <tr>
-            <td><?= htmlspecialchars($click['clicked_at'], ENT_QUOTES, 'UTF-8') ?></td>
-            <td><?= htmlspecialchars($click['country'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></td>
-            <td><?= htmlspecialchars($click['city'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></td>
-            <td><?= htmlspecialchars($click['device_type'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></td>
-            <td><?= htmlspecialchars($click['browser'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></td>
-            <td><?= htmlspecialchars($click['os'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></td>
-            <td class="url-cell"><?= htmlspecialchars($click['referrer'] ?? 'Direct', ENT_QUOTES, 'UTF-8') ?></td>
-          </tr>
-          <?php endforeach; ?>
-          <?php else: ?>
-          <tr><td colspan="7" class="empty-state">No clicks recorded yet.</td></tr>
-          <?php endif; ?>
-        </tbody>
-      </table>
+    <!-- Recent Clicks Table -->
+    <div class="bento-card bento-col-12">
+      <div class="card-header" style="border:none; padding:0; margin-bottom:1.5rem; display:flex; justify-content:space-between; align-items:center;">
+        <h3 class="card-title" style="font-size:1.05rem; font-weight:600; margin:0;">Recent Clicks</h3>
+        <span class="badge badge-success" id="live-indicator" style="animation: pulse 2s infinite;">Live</span>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <div class="table-responsive" style="border:none; background:transparent;">
+          <table class="table" id="recent-clicks-table">
+            <thead>
+              <tr>
+                <th style="padding-left:0;">Time</th>
+                <th>Country</th>
+                <th>City</th>
+                <th>Device</th>
+                <th>Browser</th>
+                <th>OS</th>
+                <th style="padding-right:0;">Referrer</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php if (!empty($stats['recent_clicks'])): ?>
+              <?php foreach ($stats['recent_clicks'] as $click): ?>
+              <tr>
+                <td style="padding-left:0;"><?= htmlspecialchars($click['clicked_at'], ENT_QUOTES, 'UTF-8') ?></td>
+                <td><?= htmlspecialchars($click['country'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></td>
+                <td><?= htmlspecialchars($click['city'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></td>
+                <td><?= htmlspecialchars($click['device_type'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></td>
+                <td><?= htmlspecialchars($click['browser'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></td>
+                <td><?= htmlspecialchars($click['os'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></td>
+                <td class="url-cell" style="padding-right:0;"><span class="truncate-text" title="<?= htmlspecialchars($click['referrer'] ?? 'Direct', ENT_QUOTES, 'UTF-8') ?>" style="max-width:200px; display:inline-block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($click['referrer'] ?? 'Direct', ENT_QUOTES, 'UTF-8') ?></span></td>
+              </tr>
+              <?php endforeach; ?>
+              <?php else: ?>
+              <tr><td colspan="7" class="empty-state" style="text-align:center; padding:2rem 0;">No clicks recorded yet.</td></tr>
+              <?php endif; ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -210,13 +223,13 @@ function startPolling(linkId) {
           data.data.forEach(function(click) {
             if (click.clicked_at > lastTime) lastTime = click.clicked_at;
             var tr = document.createElement('tr');
-            tr.innerHTML = '<td>' + escapeHtml(click.clicked_at) + '</td>' +
+            tr.innerHTML = '<td style="padding-left:0;">' + escapeHtml(click.clicked_at) + '</td>' +
               '<td>' + escapeHtml(click.country || 'Unknown') + '</td>' +
               '<td>' + escapeHtml(click.city || 'Unknown') + '</td>' +
               '<td>' + escapeHtml(click.device_type || 'Unknown') + '</td>' +
               '<td>' + escapeHtml(click.browser || 'Unknown') + '</td>' +
               '<td>' + escapeHtml(click.os || 'Unknown') + '</td>' +
-              '<td class="url-cell">' + escapeHtml(click.referrer || 'Direct') + '</td>';
+              '<td class="url-cell" style="padding-right:0;">' + escapeHtml(click.referrer || 'Direct') + '</td>';
             tbody.insertBefore(tr, tbody.firstChild);
           });
           document.getElementById('live-indicator').classList.add('pulse');

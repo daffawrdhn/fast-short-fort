@@ -6,18 +6,18 @@
     <h1 class="page-title">Analytics</h1>
     <div class="page-actions">
       <button class="btn btn-outline" onclick="exportAnalytics('csv')" title="Export CSV">
-        <span class="icon-download"></span> CSV
+        CSV
       </button>
       <button class="btn btn-outline" onclick="exportAnalytics('json')" title="Export JSON">
-        <span class="icon-download"></span> JSON
+        JSON
       </button>
     </div>
   </div>
 
-  <form method="GET" action="/analytics" class="analytics-filters" id="filter-form">
-    <div class="filter-group">
-      <label for="preset">Period</label>
-      <select id="preset" onchange="applyPreset(this.value)">
+  <form method="GET" action="/analytics" class="analytics-filters" id="filter-form" style="display:flex; gap:1.5rem; align-items:flex-end; margin-bottom:2rem; flex-wrap:wrap;">
+    <div class="filter-group" style="margin:0; display:flex; flex-direction:column; gap:0.5rem;">
+      <label for="preset" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; color:var(--text-secondary);">Period</label>
+      <select id="preset" onchange="applyPreset(this.value)" class="form-control" style="padding:0.5rem 2rem 0.5rem 0.75rem; border-radius:var(--radius); border:1px solid var(--border-color); background:var(--bg-primary); color:var(--text-primary);">
         <option value="24h">Last 24 Hours</option>
         <option value="7d" <?= $startDate === date('Y-m-d', strtotime('-7 days')) ? 'selected' : '' ?>>Last 7 Days</option>
         <option value="30d" <?= $startDate === date('Y-m-d', strtotime('-30 days')) ? 'selected' : '' ?>>Last 30 Days</option>
@@ -25,106 +25,124 @@
         <option value="custom" <?= !in_array($startDate, [date('Y-m-d', strtotime('-7 days')), date('Y-m-d', strtotime('-30 days')), date('Y-m-d', strtotime('-90 days'))]) ? 'selected' : '' ?>>Custom</option>
       </select>
     </div>
-    <div class="filter-group" id="custom-dates" style="display:<?= !in_array($startDate, [date('Y-m-d', strtotime('-7 days')), date('Y-m-d', strtotime('-30 days')), date('Y-m-d', strtotime('-90 days'))]) ? 'flex' : 'none' ?>">
-      <label for="start_date">From</label>
-      <input type="date" id="start_date" name="start_date" value="<?= htmlspecialchars($startDate, ENT_QUOTES, 'UTF-8') ?>">
-      <label for="end_date">To</label>
-      <input type="date" id="end_date" name="end_date" value="<?= htmlspecialchars($endDate, ENT_QUOTES, 'UTF-8') ?>">
+    <div id="custom-dates" style="display:<?= !in_array($startDate, [date('Y-m-d', strtotime('-7 days')), date('Y-m-d', strtotime('-30 days')), date('Y-m-d', strtotime('-90 days'))]) ? 'flex' : 'none' ?>; gap:1rem; align-items:flex-end; flex-wrap:wrap;">
+      <div class="filter-group" style="margin:0; display:flex; flex-direction:column; gap:0.5rem;">
+        <label for="start_date" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; color:var(--text-secondary);">From</label>
+        <input type="date" id="start_date" name="start_date" value="<?= htmlspecialchars($startDate, ENT_QUOTES, 'UTF-8') ?>" class="form-control" style="padding:0.45rem 0.75rem; border-radius:var(--radius); border:1px solid var(--border-color); background:var(--bg-primary); color:var(--text-primary);">
+      </div>
+      <div class="filter-group" style="margin:0; display:flex; flex-direction:column; gap:0.5rem;">
+        <label for="end_date" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; color:var(--text-secondary);">To</label>
+        <input type="date" id="end_date" name="end_date" value="<?= htmlspecialchars($endDate, ENT_QUOTES, 'UTF-8') ?>" class="form-control" style="padding:0.45rem 0.75rem; border-radius:var(--radius); border:1px solid var(--border-color); background:var(--bg-primary); color:var(--text-primary);">
+      </div>
     </div>
-    <button type="submit" class="btn btn-primary">Apply</button>
+    <button type="submit" class="btn btn-primary" style="padding:0.525rem 1.25rem;">Apply</button>
   </form>
 
-  <div class="stats-cards">
-    <div class="stat-card">
-      <div class="stat-value"><?= number_format($stats['total_clicks'] ?? 0) ?></div>
+  <div class="bento-grid">
+    <!-- Stat 1: Total Clicks -->
+    <div class="bento-card bento-col-3">
       <div class="stat-label">Total Clicks</div>
+      <div class="stat-value"><?= number_format($stats['total_clicks'] ?? 0) ?></div>
     </div>
-    <div class="stat-card">
-      <div class="stat-value"><?= number_format($stats['unique_clicks'] ?? 0) ?></div>
-      <div class="stat-label">Unique Clicks</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value"><?= number_format(count($stats['countries_data'] ?? [])) ?></div>
-      <div class="stat-label">Countries</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value"><?= number_format(count($stats['devices'] ?? [])) ?></div>
-      <div class="stat-label">Device Types</div>
-    </div>
-  </div>
 
-  <div class="charts-grid">
-    <div class="chart-card full-width">
-      <h3 class="chart-title">Clicks Over Time</h3>
-      <div class="chart-wrapper">
+    <!-- Stat 2: Unique Clicks -->
+    <div class="bento-card bento-col-3">
+      <div class="stat-label">Unique Clicks</div>
+      <div class="stat-value"><?= number_format($stats['unique_clicks'] ?? 0) ?></div>
+    </div>
+
+    <!-- Stat 3: Countries -->
+    <div class="bento-card bento-col-3">
+      <div class="stat-label">Countries</div>
+      <div class="stat-value"><?= number_format(count($stats['countries_data'] ?? [])) ?></div>
+    </div>
+
+    <!-- Stat 4: Device Types -->
+    <div class="bento-card bento-col-3">
+      <div class="stat-label">Device Types</div>
+      <div class="stat-value"><?= number_format(count($stats['devices'] ?? [])) ?></div>
+    </div>
+
+    <!-- Clicks Over Time -->
+    <div class="bento-card bento-col-12 bento-row-3" style="min-height:350px;">
+      <h3 class="card-title" style="margin-bottom:1.5rem; font-size:1.05rem; font-weight:600;">Clicks Over Time</h3>
+      <div style="flex-grow:1; position:relative; min-height:220px;">
         <canvas id="chart-timeseries"></canvas>
       </div>
     </div>
 
-    <div class="chart-card">
-      <h3 class="chart-title">By Country</h3>
-      <div class="chart-wrapper">
+    <!-- By Country -->
+    <div class="bento-card bento-col-4 bento-row-3" style="min-height:320px;">
+      <h3 class="card-title" style="margin-bottom:1.5rem; font-size:1.05rem; font-weight:600;">By Country</h3>
+      <div style="flex-grow:1; position:relative; min-height:200px;">
         <canvas id="chart-country"></canvas>
       </div>
     </div>
 
-    <div class="chart-card">
-      <h3 class="chart-title">By Device</h3>
-      <div class="chart-wrapper">
+    <!-- By Device -->
+    <div class="bento-card bento-col-4 bento-row-3" style="min-height:320px;">
+      <h3 class="card-title" style="margin-bottom:1.5rem; font-size:1.05rem; font-weight:600;">By Device</h3>
+      <div style="flex-grow:1; position:relative; min-height:200px;">
         <canvas id="chart-device"></canvas>
       </div>
     </div>
 
-    <div class="chart-card">
-      <h3 class="chart-title">By Browser</h3>
-      <div class="chart-wrapper">
+    <!-- By Browser -->
+    <div class="bento-card bento-col-4 bento-row-3" style="min-height:320px;">
+      <h3 class="card-title" style="margin-bottom:1.5rem; font-size:1.05rem; font-weight:600;">By Browser</h3>
+      <div style="flex-grow:1; position:relative; min-height:200px;">
         <canvas id="chart-browser"></canvas>
       </div>
     </div>
 
-    <div class="chart-card">
-      <h3 class="chart-title">By Operating System</h3>
-      <div class="chart-wrapper">
+    <!-- By OS -->
+    <div class="bento-card bento-col-6 bento-row-3" style="min-height:320px;">
+      <h3 class="card-title" style="margin-bottom:1.5rem; font-size:1.05rem; font-weight:600;">By Operating System</h3>
+      <div style="flex-grow:1; position:relative; min-height:200px;">
         <canvas id="chart-os"></canvas>
       </div>
     </div>
 
-    <div class="chart-card">
-      <h3 class="chart-title">Top Referrers</h3>
-      <div class="chart-wrapper">
+    <!-- Top Referrers -->
+    <div class="bento-card bento-col-6 bento-row-3" style="min-height:320px;">
+      <h3 class="card-title" style="margin-bottom:1.5rem; font-size:1.05rem; font-weight:600;">Top Referrers</h3>
+      <div style="flex-grow:1; position:relative; min-height:200px;">
         <canvas id="chart-referrer"></canvas>
       </div>
     </div>
-  </div>
 
-  <div class="table-card">
-    <h3 class="table-title">Top Links</h3>
-    <?php if (!empty($stats['top_links'])): ?>
-    <div class="table-responsive">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Slug</th>
-            <th>Original URL</th>
-            <th>Clicks</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($stats['top_links'] as $link): ?>
-          <tr>
-            <td><a href="/analytics/<?= (int) $link['id'] ?>"><?= htmlspecialchars($link['slug'], ENT_QUOTES, 'UTF-8') ?></a></td>
-            <td class="url-cell"><?= htmlspecialchars($link['original_url'], ENT_QUOTES, 'UTF-8') ?></td>
-            <td><?= number_format((int) $link['clicks']) ?></td>
-            <td><a href="/analytics/<?= (int) $link['id'] ?>" class="btn btn-sm btn-outline">View</a></td>
-          </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
+    <!-- Top Links -->
+    <div class="bento-card bento-col-12">
+      <h3 class="card-title" style="margin-bottom:1.5rem; font-size:1.05rem; font-weight:600;">Top Links</h3>
+      <?php if (!empty($stats['top_links'])): ?>
+      <div class="table-responsive" style="border:none; background:transparent;">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="padding-left:0;">Slug</th>
+              <th>Original URL</th>
+              <th>Clicks</th>
+              <th style="padding-right:0;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php foreach ($stats['top_links'] as $link): ?>
+            <tr>
+              <td style="padding-left:0;"><a href="/analytics/<?= (int) $link['id'] ?>" style="font-weight:600; color:var(--text-primary);"><?= htmlspecialchars($link['slug'], ENT_QUOTES, 'UTF-8') ?></a></td>
+              <td class="url-cell">
+                <span class="truncate-text" title="<?= htmlspecialchars($link['original_url'], ENT_QUOTES, 'UTF-8') ?>" style="max-width:550px; display:inline-block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($link['original_url'], ENT_QUOTES, 'UTF-8') ?></span>
+              </td>
+              <td><span style="font-weight:500;"><?= number_format((int) $link['clicks']) ?></span></td>
+              <td style="padding-right:0;"><a href="/analytics/<?= (int) $link['id'] ?>" class="btn btn-sm btn-outline">View</a></td>
+            </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+      <?php else: ?>
+      <p class="empty-state" style="text-align:center; margin:2rem 0;">No analytics data available yet. Create some links to get started.</p>
+      <?php endif; ?>
     </div>
-    <?php else: ?>
-    <p class="empty-state">No analytics data available yet. Create some links to get started.</p>
-    <?php endif; ?>
   </div>
 </div>
 
