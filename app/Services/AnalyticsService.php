@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Core\Database;
 use App\Core\Env;
 use App\Core\Logger;
+use App\Core\Request;
 use PDO;
 
 class AnalyticsService
