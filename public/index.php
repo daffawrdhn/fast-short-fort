@@ -99,6 +99,16 @@ $router->group('', function (Router $router) {
     $router->post('/profile', [\App\Controllers\Web\ProfileController::class, 'update']);
     $router->get('/settings', [\App\Controllers\Web\SettingsController::class, 'index'])->name('settings');
     $router->post('/settings', [\App\Controllers\Web\SettingsController::class, 'update']);
+    $router->get('/workspace', function (Request $req, Response $res) {
+        $res->status(200)->view('workspace.index', [
+            'title' => 'Workspace - FORT',
+            'activeNav' => 'workspace',
+            'user' => [
+                'name' => $_SESSION['user_name'] ?? 'User',
+            ],
+            'isAdmin' => $_SESSION['user_is_admin'] ?? false,
+        ]);
+    });
 }, [\App\Middleware\AuthMiddleware::class]);
 
 $router->group('', function (Router $router) {
