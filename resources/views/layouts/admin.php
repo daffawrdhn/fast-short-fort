@@ -16,9 +16,14 @@
     <aside class="admin-sidebar" role="navigation" aria-label="Admin navigation">
       <div class="sidebar-header">
         <a href="/admin" class="sidebar-logo" aria-label="Admin Dashboard">FORT Admin</a>
-        <button class="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false">
-          <span class="hamburger"></span>
-        </button>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <button class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode" style="background: none; border: none; cursor: pointer; color: var(--text-primary); font-size: 1.1rem; padding: 0.25rem;">
+            <span class="theme-icon" aria-hidden="true">&#x1F319;</span>
+          </button>
+          <button class="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false">
+            <span class="hamburger"></span>
+          </button>
+        </div>
       </div>
 
       <ul class="sidebar-nav">
@@ -32,6 +37,15 @@
       </ul>
 
       <div class="sidebar-footer">
+        <?php if (!empty($user)): ?>
+        <div class="sidebar-user">
+          <div class="user-avatar" aria-hidden="true"><?= htmlspecialchars(strtoupper(($user['name'] ?? 'A')[0]), ENT_QUOTES, 'UTF-8') ?></div>
+          <div class="user-info">
+            <span class="user-name"><?= htmlspecialchars($user['name'] ?? 'Admin', ENT_QUOTES, 'UTF-8') ?></span>
+            <span class="user-email"><?= htmlspecialchars($user['email'] ?? '', ENT_QUOTES, 'UTF-8') ?></span>
+          </div>
+        </div>
+        <?php endif; ?>
         <a href="/dashboard" class="nav-link" aria-label="Back to app">&#x2190; Back to App</a>
         <form method="post" action="/logout" class="inline-form">
           <input type="hidden" name="_csrf" value="<?= htmlspecialchars($csrf ?? '', ENT_QUOTES, 'UTF-8') ?>">

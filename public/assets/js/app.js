@@ -328,8 +328,27 @@
     });
   }
 
+  function adminSidebarToggle () {
+    var toggle = document.querySelector('.sidebar-toggle');
+    var sidebar = document.querySelector('.admin-sidebar');
+    if (!toggle || !sidebar) return;
+
+    toggle.addEventListener('click', function () {
+      var isOpen = sidebar.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen);
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!sidebar.contains(e.target) && sidebar.classList.contains('open') && !toggle.contains(e.target)) {
+        sidebar.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
   ready(darkMode);
   ready(mobileNav);
+  ready(adminSidebarToggle);
   ready(userDropdown);
   ready(flashDismiss);
   ready(formValidation);
@@ -340,3 +359,4 @@
   ready(buttonLoading);
   ready(initClipboard);
 })();
+
