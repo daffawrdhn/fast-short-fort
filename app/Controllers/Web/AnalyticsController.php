@@ -110,7 +110,7 @@ class AnalyticsController
         $since = $request->query('since', '');
 
         $stmt = \App\Core\Database::connection()->prepare('
-            SELECT id, ip_hash, country, city, device_type, browser, os, referrer, clicked_at
+            SELECT id, ip_hash, ip_address, country, city, device_type, browser, os, referrer, user_language, clicked_at
             FROM link_clicks
             WHERE link_id = :link_id' . ($since ? ' AND clicked_at > :since' : '') . '
             ORDER BY clicked_at DESC

@@ -35,13 +35,23 @@ class AnalyticsService
         $geoEnabled = Env::get('FEATURE_GEOLOCATION', 'true') === 'true';
         $geo = $geoEnabled ? $this->lookupIP($ip) : ['country' => null, 'city' => null, 'lat' => null, 'lon' => null];
 
+        $acceptLang = $request->header('Accept-Language', '');
+        $lang = 'Unknown';
+        if (!empty($acceptLang)) {
+            $parts = explode(',', $acceptLang);
+            if (isset($parts[0])) {
+                $primaryLang = trim(explode(';', $parts[0])[0]);
+                $lang = substr($primaryLang, 0, 10);
+            }
+        }
+
         $stmt = $this->db->prepare('
             INSERT INTO link_clicks
                 (link_id, ip_hash, ip_address, country, city, latitude, longitude,
-                 device_type, browser, browser_version, os, referrer, user_agent, clicked_at)
+                 device_type, browser, browser_version, os, referrer, user_agent, user_language, clicked_at)
             VALUES
                 (:link_id, :ip_hash, :ip_address, :country, :city, :latitude, :longitude,
-                 :device_type, :browser, :browser_version, :os, :referrer, :user_agent, CURRENT_TIMESTAMP)
+                 :device_type, :browser, :browser_version, :os, :referrer, :user_agent, :user_language, CURRENT_TIMESTAMP)
         ');
 
         $stmt->execute([
@@ -58,6 +68,7 @@ class AnalyticsService
             ':os'              => $parsed['os'],
             ':referrer'        => $referrer,
             ':user_agent'      => $userAgent,
+            ':user_language'   => $lang,
         ]);
     }
 
@@ -206,7 +217,7 @@ class AnalyticsService
     public function getRecentClicks(int $linkId, int $limit = 50): array
     {
         $stmt = $this->db->prepare('
-            SELECT id, ip_hash, country, city, device_type, browser, os, referrer, clicked_at
+            SELECT id, ip_hash, ip_address, country, city, device_type, browser, os, referrer, user_language, clicked_at
             FROM link_clicks
             WHERE link_id = :link_id
             ORDER BY clicked_at DESC
@@ -242,7 +253,23 @@ class AnalyticsService
             'referrers' => $this->getClicksByReferrer($linkId, null, null),
             'clicks_over_time' => $this->getClicksByTime($linkId, 'day', null, null),
             'recent_clicks' => $this->getRecentClicks($linkId, 10),
+            'languages' => $this->getClicksByLanguage($linkId, null, null),
         ];
+    }
+
+    public function getClicksByLanguage(int $linkId, ?string $startDate = null, ?string $endDate = null): array
+    {
+        [$where, $params] = $this->buildDateFilter($linkId, $startDate, $endDate);
+        $stmt = $this->db->prepare("
+            SELECT COALESCE(NULLIF(user_language, ''), 'Unknown') AS language, COUNT(*) AS count
+            FROM link_clicks
+            WHERE link_id = :link_id {$where}
+            GROUP BY language
+            ORDER BY count DESC
+            LIMIT 20
+        ");
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getWorkspaceStats(int $workspaceId, ?string $startDate = null, ?string $endDate = null): array
@@ -378,6 +405,19 @@ class AnalyticsService
         $stmt->execute($params);
         $clicksOverTime = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        // Workspace languages breakdown
+        $stmt = $this->db->prepare("
+            SELECT COALESCE(NULLIF(lc.user_language, ''), 'Unknown') AS language, COUNT(*) AS count
+            FROM link_clicks lc
+            JOIN links l ON l.id = lc.link_id
+            WHERE l.workspace_id = :workspace_id {$dateJoin}
+            GROUP BY language
+            ORDER BY count DESC
+            LIMIT 20
+        ");
+        $stmt->execute($params);
+        $languages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
         return [
             'total_clicks' => (int) ($summary['total_clicks'] ?? 0),
             'unique_clicks' => (int) ($summary['unique_clicks'] ?? 0),
@@ -389,6 +429,7 @@ class AnalyticsService
             'os' => $os,
             'referrers' => $referrers,
             'clicks_over_time' => $clicksOverTime,
+            'languages' => $languages,
         ];
     }
 
@@ -396,8 +437,8 @@ class AnalyticsService
     {
         [$where, $params] = $this->buildDateFilter($linkId, $startDate, $endDate);
         $stmt = $this->db->prepare("
-            SELECT ip_hash, country, city, latitude, longitude, device_type, browser,
-                   browser_version, os, referrer, clicked_at
+            SELECT ip_hash, ip_address, country, city, latitude, longitude, device_type, browser,
+                   browser_version, os, referrer, user_language, clicked_at
             FROM link_clicks
             WHERE link_id = :link_id {$where}
             ORDER BY clicked_at DESC
@@ -549,8 +590,8 @@ class AnalyticsService
         }
 
         $stmt = $this->db->prepare("
-            SELECT l.slug, lc.ip_hash, lc.country, lc.city, lc.latitude, lc.longitude,
-                   lc.device_type, lc.browser, lc.browser_version, lc.os, lc.referrer, lc.clicked_at
+            SELECT l.slug, lc.ip_hash, lc.ip_address, lc.country, lc.city, lc.latitude, lc.longitude,
+                   lc.device_type, lc.browser, lc.browser_version, lc.os, lc.referrer, lc.user_language, lc.clicked_at
             FROM link_clicks lc
             JOIN links l ON l.id = lc.link_id
             WHERE l.workspace_id = :workspace_id {$dateJoin}
@@ -564,7 +605,7 @@ class AnalyticsService
         }
 
         $csv = fopen('php://temp', 'r+');
-        fputcsv($csv, array_keys($rows[0] ?? ['Slug', 'IP Hash', 'Country', 'City', 'Latitude', 'Longitude', 'Device Type', 'Browser', 'Browser Version', 'OS', 'Referrer', 'Clicked At']));
+        fputcsv($csv, array_keys($rows[0] ?? ['Slug', 'IP Hash', 'IP Address', 'Country', 'City', 'Latitude', 'Longitude', 'Device Type', 'Browser', 'Browser Version', 'OS', 'Referrer', 'Language', 'Clicked At']));
         foreach ($rows as $row) {
             fputcsv($csv, $row);
         }

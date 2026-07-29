@@ -85,7 +85,7 @@
     </div>
 
     <!-- By OS -->
-    <div class="bento-card bento-col-6 bento-row-3" style="min-height:320px;">
+    <div class="bento-card bento-col-4 bento-row-3" style="min-height:320px;">
       <h3 class="card-title" style="margin-bottom:1.5rem; font-size:1.05rem; font-weight:600;">By Operating System</h3>
       <div style="flex-grow:1; position:relative; min-height:200px;">
         <canvas id="chart-os"></canvas>
@@ -93,10 +93,18 @@
     </div>
 
     <!-- Top Referrers -->
-    <div class="bento-card bento-col-6 bento-row-3" style="min-height:320px;">
+    <div class="bento-card bento-col-4 bento-row-3" style="min-height:320px;">
       <h3 class="card-title" style="margin-bottom:1.5rem; font-size:1.05rem; font-weight:600;">Top Referrers</h3>
       <div style="flex-grow:1; position:relative; min-height:200px;">
         <canvas id="chart-referrer"></canvas>
+      </div>
+    </div>
+
+    <!-- Top Languages -->
+    <div class="bento-card bento-col-4 bento-row-3" style="min-height:320px;">
+      <h3 class="card-title" style="margin-bottom:1.5rem; font-size:1.05rem; font-weight:600;">Top Languages</h3>
+      <div style="flex-grow:1; position:relative; min-height:200px;">
+        <canvas id="chart-language"></canvas>
       </div>
     </div>
 
@@ -120,8 +128,10 @@
             <thead>
               <tr>
                 <th style="padding-left:0;">Time</th>
+                <th>IP Address</th>
                 <th>Country</th>
                 <th>City</th>
+                <th>Lang</th>
                 <th>Device</th>
                 <th>Browser</th>
                 <th>OS</th>
@@ -133,16 +143,18 @@
               <?php foreach ($stats['recent_clicks'] as $click): ?>
               <tr>
                 <td style="padding-left:0;"><?= htmlspecialchars($click['clicked_at'], ENT_QUOTES, 'UTF-8') ?></td>
+                <td style="font-family:var(--font-mono); font-size:0.875rem;"><?= htmlspecialchars($click['ip_address'] ?? ($click['ip_hash'] ? substr($click['ip_hash'], 0, 8) . '...' : 'Unknown'), ENT_QUOTES, 'UTF-8') ?></td>
                 <td><?= htmlspecialchars($click['country'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></td>
                 <td><?= htmlspecialchars($click['city'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></td>
+                <td><span class="badge badge-secondary" style="text-transform:uppercase;"><?= htmlspecialchars($click['user_language'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></span></td>
                 <td><?= htmlspecialchars($click['device_type'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></td>
                 <td><?= htmlspecialchars($click['browser'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></td>
                 <td><?= htmlspecialchars($click['os'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></td>
-                <td class="url-cell" style="padding-right:0;"><span class="truncate-text" title="<?= htmlspecialchars($click['referrer'] ?? 'Direct', ENT_QUOTES, 'UTF-8') ?>" style="max-width:200px; display:inline-block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($click['referrer'] ?? 'Direct', ENT_QUOTES, 'UTF-8') ?></span></td>
+                <td class="url-cell" style="padding-right:0;"><span class="truncate-text" title="<?= htmlspecialchars($click['referrer'] ?? 'Direct', ENT_QUOTES, 'UTF-8') ?>" style="max-width:150px; display:inline-block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($click['referrer'] ?? 'Direct', ENT_QUOTES, 'UTF-8') ?></span></td>
               </tr>
               <?php endforeach; ?>
               <?php else: ?>
-              <tr><td colspan="7" class="empty-state" style="text-align:center; padding:2rem 0;">No clicks recorded yet.</td></tr>
+              <tr><td colspan="9" class="empty-state" style="text-align:center; padding:2rem 0;">No clicks recorded yet.</td></tr>
               <?php endif; ?>
             </tbody>
           </table>
@@ -207,6 +219,13 @@ document.addEventListener('DOMContentLoaded', function() {
   );
   <?php endif; ?>
 
+  <?php if (!empty($stats['languages'])): ?>
+  renderChart('chart-language', 'pie',
+    <?= json_encode(array_column($stats['languages'], 'language')) ?>,
+    [{ data: <?= json_encode(array_map('intval', array_column($stats['languages'], 'count'))) ?>, backgroundColor: ['#ec4899','#8b5cf6','#ef4444','#f59e0b','#10b981','#3b82f6','#06b6d4','#84cc16'] }]
+  );
+  <?php endif; ?>
+
   startPolling(<?= $linkId ?>);
 });
 
@@ -224,12 +243,14 @@ function startPolling(linkId) {
             if (click.clicked_at > lastTime) lastTime = click.clicked_at;
             var tr = document.createElement('tr');
             tr.innerHTML = '<td style="padding-left:0;">' + escapeHtml(click.clicked_at) + '</td>' +
+              '<td style="font-family:var(--font-mono); font-size:0.875rem;">' + escapeHtml(click.ip_address || (click.ip_hash ? click.ip_hash.substring(0, 8) + '...' : 'Unknown')) + '</td>' +
               '<td>' + escapeHtml(click.country || 'Unknown') + '</td>' +
               '<td>' + escapeHtml(click.city || 'Unknown') + '</td>' +
+              '<td><span class="badge badge-secondary" style="text-transform:uppercase;">' + escapeHtml(click.user_language || 'Unknown') + '</span></td>' +
               '<td>' + escapeHtml(click.device_type || 'Unknown') + '</td>' +
               '<td>' + escapeHtml(click.browser || 'Unknown') + '</td>' +
               '<td>' + escapeHtml(click.os || 'Unknown') + '</td>' +
-              '<td class="url-cell" style="padding-right:0;">' + escapeHtml(click.referrer || 'Direct') + '</td>';
+              '<td class="url-cell" style="padding-right:0;"><span class="truncate-text" title="' + escapeHtml(click.referrer || 'Direct') + '" style="max-width:150px; display:inline-block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escapeHtml(click.referrer || 'Direct') + '</span></td>';
             tbody.insertBefore(tr, tbody.firstChild);
           });
           document.getElementById('live-indicator').classList.add('pulse');

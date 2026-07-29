@@ -96,7 +96,7 @@
     </div>
 
     <!-- By OS -->
-    <div class="bento-card bento-col-6 bento-row-3" style="min-height:320px;">
+    <div class="bento-card bento-col-4 bento-row-3" style="min-height:320px;">
       <h3 class="card-title" style="margin-bottom:1.5rem; font-size:1.05rem; font-weight:600;">By Operating System</h3>
       <div style="flex-grow:1; position:relative; min-height:200px;">
         <canvas id="chart-os"></canvas>
@@ -104,10 +104,18 @@
     </div>
 
     <!-- Top Referrers -->
-    <div class="bento-card bento-col-6 bento-row-3" style="min-height:320px;">
+    <div class="bento-card bento-col-4 bento-row-3" style="min-height:320px;">
       <h3 class="card-title" style="margin-bottom:1.5rem; font-size:1.05rem; font-weight:600;">Top Referrers</h3>
       <div style="flex-grow:1; position:relative; min-height:200px;">
         <canvas id="chart-referrer"></canvas>
+      </div>
+    </div>
+
+    <!-- Top Languages -->
+    <div class="bento-card bento-col-4 bento-row-3" style="min-height:320px;">
+      <h3 class="card-title" style="margin-bottom:1.5rem; font-size:1.05rem; font-weight:600;">Top Languages</h3>
+      <div style="flex-grow:1; position:relative; min-height:200px;">
+        <canvas id="chart-language"></canvas>
       </div>
     </div>
 
@@ -207,6 +215,13 @@ document.addEventListener('DOMContentLoaded', function() {
     <?= json_encode(array_column($stats['referrers'], 'referrer_group')) ?>,
     [{ label: 'Clicks', data: <?= json_encode(array_map('intval', array_column($stats['referrers'], 'count'))) ?>, backgroundColor: '#8b5cf6' }],
     { plugins: { legend: { display: false } } }
+  );
+  <?php endif; ?>
+
+  <?php if (!empty($stats['languages'])): ?>
+  renderChart('chart-language', 'pie',
+    <?= json_encode(array_column($stats['languages'], 'language')) ?>,
+    [{ data: <?= json_encode(array_map('intval', array_column($stats['languages'], 'count'))) ?>, backgroundColor: ['#ec4899','#8b5cf6','#ef4444','#f59e0b','#10b981','#3b82f6','#06b6d4','#84cc16'] }]
   );
   <?php endif; ?>
 });
