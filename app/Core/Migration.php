@@ -64,6 +64,7 @@ class Migration
                 continue;
             }
 
+            $sql = $this->processDriverSyntax($sql);
             $statements = $this->splitStatements($sql);
 
             try {
@@ -72,10 +73,7 @@ class Migration
                 foreach ($statements as $statement) {
                     $statement = trim($statement);
                     if ($statement !== '') {
-                        $processed = $this->processDriverSyntax($statement);
-                        if ($processed !== '') {
-                            $this->pdo->exec($processed);
-                        }
+                        $this->pdo->exec($statement);
                     }
                 }
 
@@ -111,33 +109,55 @@ class Migration
 
     private function processDriverSyntax(string $statement): string
     {
-        $pattern = '/\/\*\s*driver:\s*(\w+)\s*\*\/(.+?)(?=\/\*\s*enddriver\s*\*\/|$)/s';
-        $statement = preg_replace_callback($pattern, function ($matches) {
-            $driver = trim($matches[1]);
-            $content = trim($matches[2]);
-            return $driver === $this->driver ? $content : '';
+        $driver = $this->driver;
+
+        $statement = preg_replace_callback('/\/\*\s*driver:\s*(\w+)\s*\*\/(.*?)(?=\/\*\s*enddriver\s*\*\/|$)/s', function ($m) use ($driver) {
+            return strtolower(trim($m[1])) === $driver ? trim($m[2]) : '';
         }, $statement);
 
-        $lines = explode("\n", $statement);
-        $filtered = array_filter($lines, function (string $line) {
-            $trimmed = trim($line);
-            return !str_starts_with($trimmed, '-- ' . $this->driver)
-                && !preg_match('/^--\s*(pgsql|sqlite)/i', $trimmed);
-        });
+        $inBlock = false;
+        $blockDriver = '';
+        $blockContent = '';
+        $output = [];
 
-        $lines = [];
-        foreach (explode("\n", $statement) as $line) {
-            $trimmed = trim($line);
-            if (preg_match('/^--\s*(pgsql|sqlite):\s*(.+)$/i', $trimmed, $m)) {
-                if (strtolower($m[1]) === $this->driver) {
-                    $lines[] = $m[2];
-                }
-            } elseif (!preg_match('/^--\s*(pgsql|sqlite)\b/i', $trimmed)) {
-                $lines[] = $line;
+        foreach (explode("\n", $statement) as $raw) {
+            $trimmed = trim($raw);
+
+            if (preg_match('/^--\s*\{\{DRIVER:(\w+)\}\}\s*$/i', $trimmed, $m)) {
+                $inBlock = true;
+                $blockDriver = strtolower($m[1]);
+                $blockContent = '';
+                continue;
             }
+
+            if ($inBlock && preg_match('/^--\s*\{\{END\}\}\s*$/i', $trimmed)) {
+                if ($blockDriver === $driver) {
+                    $output[] = $blockContent;
+                }
+                $inBlock = false;
+                continue;
+            }
+
+            if ($inBlock) {
+                $blockContent .= $raw . "\n";
+                continue;
+            }
+
+            if (preg_match('/^--\s*(pgsql|sqlite):\s*(.+)$/i', $trimmed, $m)) {
+                if (strtolower($m[1]) === $driver) {
+                    $output[] = $m[2];
+                }
+                continue;
+            }
+
+            if (preg_match('/^--\s*(pgsql|sqlite)\b/i', $trimmed)) {
+                continue;
+            }
+
+            $output[] = $raw;
         }
 
-        return trim(implode("\n", $lines));
+        return trim(implode("\n", $output));
     }
 
     public function rollback(int $steps = 1): void

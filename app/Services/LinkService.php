@@ -115,10 +115,13 @@ class LinkService
             return false;
         }
 
-        $stmt = $this->db->prepare('SELECT COUNT(*) FROM blocklist WHERE :url LIKE CONCAT(\'%\', pattern, \'%\')');
-        $stmt->execute([':url' => $url]);
-        if ((int) $stmt->fetchColumn() > 0) {
-            return false;
+        try {
+            $stmt = $this->db->prepare("SELECT COUNT(*) FROM blocklist WHERE :url LIKE '%' || pattern || '%'");
+            $stmt->execute([':url' => $url]);
+            if ((int) $stmt->fetchColumn() > 0) {
+                return false;
+            }
+        } catch (\Throwable) {
         }
 
         return true;
