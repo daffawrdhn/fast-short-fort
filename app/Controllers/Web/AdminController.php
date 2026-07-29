@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers\Web;
 
+use App\Core\Logger;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\View;
@@ -189,6 +190,7 @@ class AdminController
                 if ($isAdmin) {
                     $user->update(['is_admin' => true]);
                 }
+                Logger::info('Admin created user', ['user_id' => $user->id, 'email' => $email]);
                 $this->session->flash('success', 'User created successfully.');
             } catch (\Throwable $e) {
                 $this->session->flash('error', 'Failed to create user: ' . $e->getMessage());
@@ -256,6 +258,7 @@ class AdminController
             $user = User::findById($id);
             if ($user !== null) {
                 $user->delete();
+                Logger::warning('Admin deleted user', ['user_id' => $id, 'email' => $user->email]);
                 $this->session->flash('success', 'User deleted successfully.');
             } else {
                 $this->session->flash('error', 'User not found.');
@@ -404,6 +407,7 @@ class AdminController
 
     public function updateSettings(Request $req, Response $res): void
     {
+        Logger::info('Admin updated settings', ['admin_id' => $_SESSION['user']['id'] ?? null]);
         $this->session->flash('success', 'Settings updated successfully.');
         $res->redirect('/admin/settings')->send();
     }

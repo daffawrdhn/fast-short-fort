@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Workspace - FORT</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"></head>
+<body>
+<?php require __DIR__ . '/../layouts/navbar.php'; ?>
+<div class="container mt-4"><h1>Workspace Details</h1><p>Coming soon.</p></div>
+</body>
+</html>

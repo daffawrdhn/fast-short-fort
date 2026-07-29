@@ -106,10 +106,12 @@ class Request
 
     public function ip(): string
     {
-        $proxyHeaders = ['HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'HTTP_CLIENT_IP'];
-        foreach ($proxyHeaders as $header) {
-            if (!empty($_SERVER[$header])) {
-                $ips = explode(',', $_SERVER[$header]);
+        $trustedProxies = Env::get('TRUSTED_PROXIES', '');
+        if ($trustedProxies !== '' && isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            $proxies = array_map('trim', explode(',', $trustedProxies));
+            $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '';
+            if (in_array($remoteAddr, $proxies, true)) {
+                $ips = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
                 return trim($ips[0]);
             }
         }

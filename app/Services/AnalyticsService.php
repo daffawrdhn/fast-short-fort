@@ -424,6 +424,13 @@ class AnalyticsService
 
     private function buildDateFilter(int $linkId, ?string $startDate = null, ?string $endDate = null): array
     {
+        if ($startDate !== null && !strtotime($startDate)) {
+            $startDate = null;
+        }
+        if ($endDate !== null && !strtotime($endDate)) {
+            $endDate = null;
+        }
+
         $where = '';
         $params = [':link_id' => $linkId];
 

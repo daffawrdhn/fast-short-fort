@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Core\Database;
+use App\Core\Logger;
 use PDO;
 
 class Webhook
@@ -101,41 +102,74 @@ class Webhook
         return $stmt->execute([':id' => $this->id]);
     }
 
-    public function trigger(string $event, array $payload): bool
+    public function trigger(string $eventType, array $payload): bool
     {
         $eventsList = array_map('trim', explode(',', $this->events));
 
-        if (!in_array($event, $eventsList, true)) {
+        if (!in_array($eventType, $eventsList, true)) {
             return false;
         }
 
-        $body = json_encode([
-            'event' => $event,
-            'payload' => $payload,
-            'timestamp' => time(),
+        $payload['event'] = $eventType;
+        $payload['timestamp'] = gmdate('c');
+        $body = json_encode($payload);
+
+        $maxRetries = 3;
+        $retryDelay = 2;
+
+        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            $ch = curl_init($this->url);
+            curl_setopt_array($ch, [
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => $body,
+                CURLOPT_HTTPHEADER => [
+                    'Content-Type: application/json',
+                    'X-Webhook-Secret: ' . ($this->secret ?? ''),
+                    'X-Webhook-Event: ' . $eventType,
+                    'User-Agent: FORT-Webhook/1.0',
+                ],
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT => 10,
+                CURLOPT_CONNECTTIMEOUT => 5,
+            ]);
+
+            $responseBody = curl_exec($ch);
+            $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
+            curl_close($ch);
+
+            $success = $responseStatus >= 200 && $responseStatus < 300;
+
+            $db = Database::connection();
+            $stmt = $db->prepare('
+                INSERT INTO webhook_deliveries (webhook_id, event_type, request_body, response_status, response_body, success, attempted_at)
+                VALUES (:webhook_id, :event_type, :request_body, :response_status, :response_body, :success, CURRENT_TIMESTAMP)
+            ');
+            $stmt->execute([
+                ':webhook_id' => $this->id,
+                ':event_type' => $eventType,
+                ':request_body' => $body,
+                ':response_status' => $responseStatus,
+                ':response_body' => $curlError ?: $responseBody,
+                ':success' => $success ? 1 : 0,
+            ]);
+
+            if ($success) {
+                return true;
+            }
+
+            if ($attempt < $maxRetries) {
+                sleep($retryDelay * $attempt);
+            }
+        }
+
+        Logger::error('Webhook delivery failed after retries', [
+            'webhook_id' => $this->id,
+            'url' => $this->url,
+            'event' => $eventType,
         ]);
 
-        $signature = hash_hmac('sha256', $body, $this->secret);
-
-        $ch = curl_init($this->url);
-        curl_setopt_array($ch, [
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $body,
-            CURLOPT_HTTPHEADER => [
-                'Content-Type: application/json',
-                "X-Webhook-Signature: {$signature}",
-                'User-Agent: FORT-Webhook/1.0',
-            ],
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 10,
-            CURLOPT_CONNECTTIMEOUT => 5,
-        ]);
-
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        return $httpCode >= 200 && $httpCode < 300;
+        return false;
     }
 
     public function toArray(): array

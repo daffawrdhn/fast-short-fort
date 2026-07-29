@@ -40,12 +40,31 @@ class Session
 
     public function set(string $key, mixed $value): void
     {
+        $this->checkIdleTimeout();
         $_SESSION[$key] = $value;
     }
 
     public function get(string $key, mixed $default = null): mixed
     {
+        $this->checkIdleTimeout();
         return $_SESSION[$key] ?? $default;
+    }
+
+    private function checkIdleTimeout(): void
+    {
+        $maxIdle = (int)Env::get('SESSION_LIFETIME', '120') * 60;
+        $lastActivity = $_SESSION['_last_activity'] ?? 0;
+
+        if ($lastActivity > 0 && (time() - $lastActivity) > $maxIdle) {
+            $_SESSION = [];
+            session_destroy();
+            if (!headers_sent()) {
+                header('Location: /login');
+            }
+            exit;
+        }
+
+        $_SESSION['_last_activity'] = time();
     }
 
     public function has(string $key): bool

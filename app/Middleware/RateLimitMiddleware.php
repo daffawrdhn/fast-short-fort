@@ -111,14 +111,14 @@ class RateLimitMiddleware extends Middleware
         } else {
             if ($driver === 'sqlite') {
                 $insert = $db->prepare(
-                    'INSERT INTO rate_limits (key_name, attempts, expires_at) VALUES (:key, 1, datetime(\'now\', \'+' . $this->decaySeconds . ' seconds\'))'
+                    'INSERT INTO rate_limits (key_name, attempts, expires_at) VALUES (:key, 1, datetime(\'now\', :decay || \' seconds\'))'
                 );
             } else {
                 $insert = $db->prepare(
-                    'INSERT INTO rate_limits (key_name, attempts, expires_at) VALUES (:key, 1, NOW() + INTERVAL \'' . $this->decaySeconds . ' second\')'
+                    'INSERT INTO rate_limits (key_name, attempts, expires_at) VALUES (:key, 1, NOW() + (:decay || \' second\')::INTERVAL)'
                 );
             }
-            $insert->execute([':key' => $key]);
+            $insert->execute([':key' => $key, ':decay' => (string)$this->decaySeconds]);
         }
     }
 

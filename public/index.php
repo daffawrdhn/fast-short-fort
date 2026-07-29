@@ -94,6 +94,10 @@ $router->group('', function (Router $router) {
     $router->get('/analytics', [\App\Controllers\Web\AnalyticsController::class, 'index'])->name('analytics');
     $router->get('/analytics/{linkId}', [\App\Controllers\Web\AnalyticsController::class, 'show'])->name('analytics.show');
     $router->get('/analytics/{linkId}/realtime', [\App\Controllers\Web\AnalyticsController::class, 'realtime']);
+    $router->get('/profile', [\App\Controllers\Web\ProfileController::class, 'index'])->name('profile');
+    $router->post('/profile', [\App\Controllers\Web\ProfileController::class, 'update']);
+    $router->get('/settings', [\App\Controllers\Web\SettingsController::class, 'index'])->name('settings');
+    $router->post('/settings', [\App\Controllers\Web\SettingsController::class, 'update']);
     $router->get('/admin', [\App\Controllers\Web\AdminController::class, 'index'])->name('admin');
     $router->get('/admin/users', [\App\Controllers\Web\AdminController::class, 'users']);
     $router->get('/admin/workspaces', [\App\Controllers\Web\AdminController::class, 'workspaces']);

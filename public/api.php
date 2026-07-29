@@ -24,7 +24,10 @@ if ($debug) {
 header('Content-Type: application/json; charset=utf-8');
 
 $allowedOrigins = Env::get('CORS_ALLOWED_ORIGINS', '*');
-if ($allowedOrigins === '*') {
+$appEnv = Env::get('APP_ENV', 'production');
+if ($allowedOrigins === '*' && $appEnv === 'production') {
+    header('Access-Control-Allow-Origin: ' . Env::get('APP_URL', 'https://example.com'));
+} elseif ($allowedOrigins === '*') {
     header('Access-Control-Allow-Origin: *');
 } else {
     $origin = $_SERVER['HTTP_ORIGIN'] ?? '';

@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Core\Database;
 use App\Core\Env;
 use App\Core\Hash;
+use App\Core\Logger;
 use App\Models\User;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
@@ -37,6 +38,8 @@ class AuthService
         $_SESSION['user_name'] = $user->name;
         $_SESSION['user_email'] = $user->email;
         $_SESSION['user_is_admin'] = $user->is_admin;
+
+        Logger::info('User logged in', ['user_id' => $user->id, 'email' => $user->email]);
     }
 
     public function generateRememberToken(User $user): string

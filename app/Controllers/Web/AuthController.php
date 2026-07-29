@@ -7,6 +7,7 @@ namespace App\Controllers\Web;
 use App\Core\Database;
 use App\Core\Env;
 use App\Core\Hash;
+use App\Core\Logger;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\Session;
@@ -71,14 +72,42 @@ class AuthController
             return;
         }
 
+        $attemptsKey = 'login_attempts_' . $req->ip();
+        $attempts = $this->session->get($attemptsKey, 0);
+        $lockedUntil = $this->session->get($attemptsKey . '_locked_until', 0);
+
+        if ($lockedUntil > time()) {
+            $this->session->flash('error', 'Account temporarily locked. Try again in ' . ceil(($lockedUntil - time()) / 60) . ' minutes.');
+            $res->redirect('/login')->send();
+            return;
+        }
+
+        if ($attempts >= 5) {
+            $this->session->set($attemptsKey . '_locked_until', time() + 900);
+            $this->session->set($attemptsKey, 0);
+            $this->session->flash('error', 'Too many failed attempts. Account locked for 15 minutes.');
+            $res->redirect('/login')->send();
+            return;
+        }
+
         $authService = new AuthService();
         $user = $authService->authenticate($email, $password);
 
         if ($user === false) {
-            $this->session->flash('error', 'Invalid email or password.');
+            $this->session->set($attemptsKey, $attempts + 1);
+            Logger::warning('Failed login attempt', ['email' => $email, 'ip' => $req->ip()]);
+            $remaining = 5 - ($attempts + 1);
+            $msg = 'Invalid email or password.';
+            if ($remaining > 0) {
+                $msg .= ' ' . $remaining . ' attempt(s) remaining.';
+            }
+            $this->session->flash('error', $msg);
             $res->redirect('/login')->send();
             return;
         }
+
+        $this->session->remove($attemptsKey);
+        $this->session->remove($attemptsKey . '_locked_until');
 
         $twofaEnabled = ($_ENV['FEATURE_TWOFA'] ?? 'false') === 'true';
 

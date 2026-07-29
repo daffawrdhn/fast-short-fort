@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers\Web;
 
 use App\Core\Database;
+use App\Core\Logger;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\Session;
@@ -248,6 +249,7 @@ class LinkController
                 'utm_content' => $utmParams['utm_content'] ?: null,
             ]);
 
+            Logger::info('Link created', ['slug' => $slug, 'workspace_id' => $workspaceId]);
             $this->session->flash('success', 'Link created successfully.');
         } catch (\Throwable $e) {
             $this->session->flash('error', 'Failed to create link: ' . $e->getMessage());
@@ -444,6 +446,7 @@ class LinkController
 
         if ($link !== null && $link->workspace_id === $workspaceId) {
             $link->update(['is_active' => 0]);
+            Logger::warning('Link moved to trash', ['link_id' => $id, 'slug' => $link->slug]);
             $this->session->flash('success', 'Link moved to trash.');
         } else {
             $this->session->flash('error', 'Link not found.');
@@ -472,6 +475,7 @@ class LinkController
         if ($link !== null && $link->workspace_id === $workspaceId) {
             $this->db()->prepare('DELETE FROM link_clicks WHERE link_id = :id')->execute([':id' => $link->id]);
             $link->delete();
+            Logger::warning('Link permanently deleted', ['link_id' => $id, 'slug' => $link->slug]);
             $this->session->flash('success', 'Link permanently deleted.');
         } else {
             $this->session->flash('error', 'Link not found.');
