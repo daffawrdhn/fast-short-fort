@@ -124,7 +124,7 @@ input, select, textarea, button { font-family: inherit; font-size: inherit; colo
 }
 .skip-link:focus { top: 0; }
 
-.container { width: 100%; max-width: var(--container-max); margin: 0 auto; padding: 0 1.5rem; }
+.container { width: 100%; max-width: var(--container-max); margin: 0 auto; padding-left: 1.5rem; padding-right: 1.5rem; }
 .container-sm { max-width: 640px; }
 .container-lg { max-width: 1440px; }
 
