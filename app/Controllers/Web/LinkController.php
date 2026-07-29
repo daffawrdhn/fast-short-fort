@@ -348,6 +348,7 @@ class LinkController
         $slug = trim($request->input('slug', ''));
         $expiration = $request->input('expires_at', null);
         $password = $request->input('password', '');
+        $passwordEnabled = !empty($request->input('password_enabled'));
         $isCloaked = !empty($request->input('is_cloaked'));
         $linkType = $request->input('link_type', 'direct');
         $deepLinkScheme = trim($request->input('deep_link_scheme', ''));
@@ -416,7 +417,9 @@ class LinkController
             $updateData['slug'] = $slug;
         }
 
-        if ($password !== '') {
+        if (!$passwordEnabled) {
+            $updateData['password_hash'] = null;
+        } elseif ($password !== '') {
             $updateData['password'] = $password;
         }
 

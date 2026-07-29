@@ -309,6 +309,25 @@
       .catch(function () { if (callback) callback(false); });
   };
 
+  function initClipboard() {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.btn-copy') || e.target.closest('[data-clipboard-text]');
+      if (!btn) return;
+      var text = btn.getAttribute('data-clipboard-text');
+      if (text) {
+        copyToClipboard(text);
+        var origClass = btn.className;
+        btn.classList.add('copied');
+        var origTitle = btn.getAttribute('title') || 'Copy short URL';
+        btn.setAttribute('title', 'Copied!');
+        setTimeout(function () {
+          btn.classList.remove('copied');
+          btn.setAttribute('title', origTitle);
+        }, 1500);
+      }
+    });
+  }
+
   ready(darkMode);
   ready(mobileNav);
   ready(userDropdown);
@@ -319,4 +338,5 @@
   ready(searchInput);
   ready(sortableTables);
   ready(buttonLoading);
+  ready(initClipboard);
 })();
