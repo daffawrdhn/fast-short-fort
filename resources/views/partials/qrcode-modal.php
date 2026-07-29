@@ -1,4 +1,5 @@
-<div id="qrcode-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="QR Code" style="display:none;">
+<div id="qrcode-modal" class="modal" role="dialog" aria-modal="true" aria-label="QR Code">
+  <div class="modal-overlay" onclick="closeQR()"></div>
   <div class="modal-content modal-sm">
     <div class="modal-header">
       <h3 class="modal-title">QR Code</h3>
@@ -22,17 +23,14 @@
 <script>
 function closeQR() {
   var modal = document.getElementById('qrcode-modal');
-  if (modal) modal.style.display = 'none';
+  if (modal) modal.classList.remove('open');
 }
 
 document.addEventListener('DOMContentLoaded', function() {
   var modal = document.getElementById('qrcode-modal');
   if (modal) {
-    modal.addEventListener('click', function(e) {
-      if (e.target === modal) closeQR();
-    });
     document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape' && modal.style.display === 'flex') closeQR();
+      if (e.key === 'Escape' && modal.classList.contains('open')) closeQR();
     });
   }
 });
