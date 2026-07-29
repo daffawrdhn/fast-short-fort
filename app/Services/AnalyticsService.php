@@ -217,7 +217,7 @@ class AnalyticsService
     public function getRecentClicks(int $linkId, int $limit = 50): array
     {
         $stmt = $this->db->prepare('
-            SELECT id, ip_hash, ip_address, country, city, device_type, browser, os, referrer, user_language, clicked_at
+            SELECT id, ip_hash, ip_address, country, city, device_type, browser, os, referrer, user_language, user_agent, clicked_at
             FROM link_clicks
             WHERE link_id = :link_id
             ORDER BY clicked_at DESC

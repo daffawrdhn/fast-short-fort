@@ -132,23 +132,29 @@
           <table class="table table-compact" role="table" aria-label="Recent clicks">
             <thead>
               <tr>
+                <th>Time</th>
+                <th>IP Address</th>
                 <th>Country</th>
+                <th>Lang</th>
                 <th>Device</th>
                 <th>Browser</th>
                 <th>OS</th>
+                <th>User Agent</th>
                 <th>Referrer</th>
-                <th>Time</th>
               </tr>
             </thead>
             <tbody>
               <?php foreach ($recentClicks as $click): ?>
               <tr>
+                <td><?= $this->escape(date('Y-m-d H:i', strtotime($click['clicked_at']))) ?></td>
+                <td style="font-family: monospace; font-size: 0.875rem;"><?= $this->escape($click['ip_address'] ?? ($click['ip_hash'] ? substr($click['ip_hash'], 0, 8) . '...' : 'Unknown')) ?></td>
                 <td><?= $this->escape($click['country'] ?? 'Unknown') ?></td>
+                <td><span class="badge badge-secondary" style="text-transform: uppercase;"><?= $this->escape($click['user_language'] ?? 'Unknown') ?></span></td>
                 <td><?= $this->escape($click['device_type'] ?? 'Unknown') ?></td>
                 <td><?= $this->escape($click['browser'] ?? 'Unknown') ?></td>
                 <td><?= $this->escape($click['os'] ?? 'Unknown') ?></td>
-                <td><?= $this->escape(mb_substr($click['referrer'] ?? 'Direct', 0, 40)) ?></td>
-                <td><?= $this->escape(date('Y-m-d H:i', strtotime($click['clicked_at']))) ?></td>
+                <td><span class="truncate-text" title="<?= $this->escape($click['user_agent'] ?? 'Unknown') ?>" style="max-width: 150px; display: inline-block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><?= $this->escape($click['user_agent'] ?? 'Unknown') ?></span></td>
+                <td><span class="truncate-text" title="<?= $this->escape($click['referrer'] ?? 'Direct') ?>" style="max-width: 150px; display: inline-block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><?= $this->escape($click['referrer'] ?? 'Direct') ?></span></td>
               </tr>
               <?php endforeach; ?>
             </tbody>

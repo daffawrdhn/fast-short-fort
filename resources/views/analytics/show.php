@@ -135,6 +135,7 @@
                 <th>Device</th>
                 <th>Browser</th>
                 <th>OS</th>
+                <th>User Agent</th>
                 <th style="padding-right:0;">Referrer</th>
               </tr>
             </thead>
@@ -150,11 +151,12 @@
                 <td><?= htmlspecialchars($click['device_type'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></td>
                 <td><?= htmlspecialchars($click['browser'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></td>
                 <td><?= htmlspecialchars($click['os'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></td>
+                <td><span class="truncate-text" title="<?= htmlspecialchars($click['user_agent'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?>" style="max-width:180px; display:inline-block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($click['user_agent'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></span></td>
                 <td class="url-cell" style="padding-right:0;"><span class="truncate-text" title="<?= htmlspecialchars($click['referrer'] ?? 'Direct', ENT_QUOTES, 'UTF-8') ?>" style="max-width:150px; display:inline-block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($click['referrer'] ?? 'Direct', ENT_QUOTES, 'UTF-8') ?></span></td>
               </tr>
               <?php endforeach; ?>
               <?php else: ?>
-              <tr><td colspan="9" class="empty-state" style="text-align:center; padding:2rem 0;">No clicks recorded yet.</td></tr>
+              <tr><td colspan="10" class="empty-state" style="text-align:center; padding:2rem 0;">No clicks recorded yet.</td></tr>
               <?php endif; ?>
             </tbody>
           </table>
@@ -250,6 +252,7 @@ function startPolling(linkId) {
               '<td>' + escapeHtml(click.device_type || 'Unknown') + '</td>' +
               '<td>' + escapeHtml(click.browser || 'Unknown') + '</td>' +
               '<td>' + escapeHtml(click.os || 'Unknown') + '</td>' +
+              '<td><span class="truncate-text" title="' + escapeHtml(click.user_agent || 'Unknown') + '" style="max-width:180px; display:inline-block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escapeHtml(click.user_agent || 'Unknown') + '</span></td>' +
               '<td class="url-cell" style="padding-right:0;"><span class="truncate-text" title="' + escapeHtml(click.referrer || 'Direct') + '" style="max-width:150px; display:inline-block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escapeHtml(click.referrer || 'Direct') + '</span></td>';
             tbody.insertBefore(tr, tbody.firstChild);
           });
