@@ -37,8 +37,9 @@
         </button>
         <div class="user-dropdown" data-dropdown>
           <button class="dropdown-trigger" aria-haspopup="true" aria-expanded="false">
-            <span class="user-avatar" aria-hidden="true"><?= htmlspecialchars(strtoupper(($user['name'] ?? 'U')[0]), ENT_QUOTES, 'UTF-8') ?></span>
-            <span class="user-name"><?= htmlspecialchars($user['name'] ?? 'User', ENT_QUOTES, 'UTF-8') ?></span>
+            <?php $sessName = $_SESSION['user_name'] ?? 'User'; ?>
+            <span class="user-avatar" aria-hidden="true"><?= htmlspecialchars(strtoupper($sessName[0]), ENT_QUOTES, 'UTF-8') ?></span>
+            <span class="user-name"><?= htmlspecialchars($sessName, ENT_QUOTES, 'UTF-8') ?></span>
           </button>
           <ul class="dropdown-menu" role="menu">
             <li><a href="/profile" role="menuitem">Profile</a></li>
