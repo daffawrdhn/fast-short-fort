@@ -26,7 +26,7 @@
         <li><a href="/links" role="menuitem" class="nav-link <?= ($activeNav ?? '') === 'links' ? 'active' : '' ?>">Links</a></li>
         <li><a href="/analytics" role="menuitem" class="nav-link <?= ($activeNav ?? '') === 'analytics' ? 'active' : '' ?>">Analytics</a></li>
         <li><a href="/workspace" role="menuitem" class="nav-link <?= ($activeNav ?? '') === 'workspace' ? 'active' : '' ?>">Workspace</a></li>
-        <?php if (!empty($isAdmin)): ?>
+        <?php if (!empty($_SESSION['user_is_admin'])): ?>
         <li><a href="/admin" role="menuitem" class="nav-link <?= ($activeNav ?? '') === 'admin' ? 'active' : '' ?>">Admin</a></li>
         <?php endif; ?>
       </ul>
@@ -42,7 +42,9 @@
           </button>
           <ul class="dropdown-menu" role="menu">
             <li><a href="/profile" role="menuitem">Profile</a></li>
-            <li><a href="/settings" role="menuitem">Settings</a></li>
+            <?php if (!empty($_SESSION['user_is_admin'])): ?>
+            <li><a href="/admin/settings" role="menuitem">Settings</a></li>
+            <?php endif; ?>
             <li><hr class="dropdown-divider"></li>
             <li>
               <form id="logout-form" action="/logout" method="POST" style="display: none;">
