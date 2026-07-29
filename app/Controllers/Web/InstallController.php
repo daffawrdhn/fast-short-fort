@@ -30,7 +30,7 @@ class InstallController
         $this->installLock = $this->basePath . '/storage/.install-lock';
     }
 
-    private function renderInstallPage(string $template, array $data = []): void
+    private function renderInstallPage(Response $res, string $template, array $data = []): void
     {
         $flash = [];
         foreach (['success', 'error', 'info', 'warning'] as $type) {
@@ -40,8 +40,7 @@ class InstallController
         }
         $data['flash'] = $flash;
         $data['csrf'] = $this->session->csrfToken();
-        $response = new Response();
-        echo $this->view->renderString('install.' . $template, $data);
+        $res->view('install.' . $template, $data);
     }
 
     public function index(Request $req, Response $res): void
@@ -50,7 +49,7 @@ class InstallController
             $res->redirect('/admin');
             return;
         }
-        $this->renderInstallPage('index', ['title' => 'Install - FORT (Fast Short)']);
+        $this->renderInstallPage($res, 'index', ['title' => 'Install - FORT (Fast Short)']);
     }
 
     public function requirements(Request $req, Response $res): void
@@ -98,7 +97,7 @@ class InstallController
             }
         }
 
-        $this->renderInstallPage('requirements', [
+        $this->renderInstallPage($res, 'requirements', [
             'title' => 'Requirements - Install - FORT',
             'checks' => $checks,
             'allPass' => $allPass,
@@ -114,7 +113,7 @@ class InstallController
 
         $driver = $req->query('driver', Env::get('DB_DRIVER', 'sqlite'));
 
-        $this->renderInstallPage('database', [
+        $this->renderInstallPage($res, 'database', [
             'title' => 'Database - Install - FORT',
             'driver' => $driver,
         ]);
@@ -156,7 +155,7 @@ class InstallController
             $res->redirect('/admin');
             return;
         }
-        $this->renderInstallPage('configuration', [
+        $this->renderInstallPage($res, 'configuration', [
             'title' => 'Configuration - Install - FORT',
         ]);
     }
@@ -315,7 +314,7 @@ class InstallController
             $res->redirect('/install');
             return;
         }
-        $this->renderInstallPage('complete', [
+        $this->renderInstallPage($res, 'complete', [
             'title' => 'Complete - Install - FORT',
         ]);
     }

@@ -30,7 +30,7 @@ class AuthController
         $this->session = Session::getInstance();
     }
 
-    private function renderAuthPage(string $template, array $data = []): void
+    private function renderAuthPage(Response $res, string $template, array $data = []): void
     {
         $flash = [];
         foreach (['success', 'error', 'info', 'warning'] as $type) {
@@ -40,7 +40,7 @@ class AuthController
         }
         $data['flash'] = $flash;
         $data['csrf'] = $this->session->csrfToken();
-        echo $this->view->renderString($template, $data);
+        $res->view($template, $data);
     }
 
     // --- Login ---
@@ -51,7 +51,7 @@ class AuthController
             $res->redirect('/dashboard')->send();
             return;
         }
-        $this->renderAuthPage('auth.login', ['title' => 'Sign In - FORT']);
+        $this->renderAuthPage($res, 'auth.login', ['title' => 'Sign In - FORT']);
     }
 
     public function login(Request $req, Response $res): void
@@ -138,7 +138,7 @@ class AuthController
             $res->redirect('/dashboard')->send();
             return;
         }
-        $this->renderAuthPage('auth.register', ['title' => 'Create Account - FORT']);
+        $this->renderAuthPage($res, 'auth.register', ['title' => 'Create Account - FORT']);
     }
 
     public function register(Request $req, Response $res): void
@@ -291,7 +291,7 @@ class AuthController
 
     public function showVerifyEmail(Request $req, Response $res): void
     {
-        $this->renderAuthPage('auth.verify-email', ['title' => 'Verify Email - FORT']);
+        $this->renderAuthPage($res, 'auth.verify-email', ['title' => 'Verify Email - FORT']);
     }
 
     public function verifyEmail(Request $req, Response $res): void
@@ -381,7 +381,7 @@ class AuthController
 
     public function showForgotPassword(Request $req, Response $res): void
     {
-        $this->renderAuthPage('auth.forgot-password', ['title' => 'Forgot Password - FORT']);
+        $this->renderAuthPage($res, 'auth.forgot-password', ['title' => 'Forgot Password - FORT']);
     }
 
     public function sendResetLink(Request $req, Response $res): void
@@ -445,7 +445,7 @@ class AuthController
             return;
         }
 
-        $this->renderAuthPage('auth.reset-password', [
+        $this->renderAuthPage($res, 'auth.reset-password', [
             'title' => 'Reset Password - FORT',
             'token' => $token,
         ]);
@@ -513,7 +513,7 @@ class AuthController
             return;
         }
 
-        $this->renderAuthPage('auth.twofa-challenge', ['title' => 'Two-Factor Authentication - FORT']);
+        $this->renderAuthPage($res, 'auth.twofa-challenge', ['title' => 'Two-Factor Authentication - FORT']);
     }
 
     public function verifyTwoFA(Request $req, Response $res): void
@@ -585,7 +585,7 @@ class AuthController
 
         $_SESSION['_2fa_setup_secret'] = $secret;
 
-        $this->renderAuthPage('auth.twofa-setup', [
+        $this->renderAuthPage($res, 'auth.twofa-setup', [
             'title' => 'Set Up Two-Factor Authentication - FORT',
             'secret' => $secret,
             'qrCode' => $qrCode,

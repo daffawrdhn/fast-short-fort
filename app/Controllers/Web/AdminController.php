@@ -36,7 +36,7 @@ class AdminController
         return $this->db;
     }
 
-    private function adminLayout(string $title, string $activeNav, string $content): Response
+    private function adminLayout(Response $res, string $title, string $activeNav, string $content): void
     {
         $flash = [];
         foreach (['success', 'error', 'info', 'warning'] as $type) {
@@ -50,8 +50,7 @@ class AdminController
             'email'    => $_SESSION['user_email'] ?? '',
             'is_admin' => $_SESSION['user_is_admin'] ?? false,
         ];
-        $response = new Response();
-        echo $this->view->renderString('layouts.admin', [
+        $res->view('layouts.admin', [
             'title' => $title . ' - Admin - FORT',
             'activeNav' => $activeNav,
             'content' => $content,
@@ -60,7 +59,6 @@ class AdminController
             'isAdmin' => true,
             'csrf' => $this->session->csrfToken(),
         ]);
-        return $response;
     }
 
     public function index(Request $req, Response $res): void
@@ -97,8 +95,9 @@ class AdminController
             'diskUsage' => $diskUsage,
             'extensions' => $extensions,
             'recentUsers' => $recentUsers,
+            'csrf' => $this->session->csrfToken(),
         ]);
-        $this->adminLayout('Dashboard', 'dashboard', $html);
+        $this->adminLayout($res, 'Dashboard', 'dashboard', $html);
     }
 
     public function users(Request $req, Response $res): void
@@ -151,8 +150,9 @@ class AdminController
             'page' => $page,
             'totalPages' => $totalPages,
             'total' => $total,
+            'csrf' => $this->session->csrfToken(),
         ]);
-        $this->adminLayout('Users', 'users', $html);
+        $this->adminLayout($res, 'Users', 'users', $html);
     }
 
     public function createUser(Request $req, Response $res): void
@@ -345,8 +345,9 @@ class AdminController
             'page' => $page,
             'totalPages' => $totalPages,
             'total' => $total,
+            'csrf' => $this->session->csrfToken(),
         ]);
-        $this->adminLayout('Workspaces', 'workspaces', $html);
+        $this->adminLayout($res, 'Workspaces', 'workspaces', $html);
     }
 
     public function editWorkspace(Request $req, Response $res, array $params): void
@@ -407,13 +408,16 @@ class AdminController
             'DEFAULT_USER_PLAN' => Env::get('DEFAULT_USER_PLAN', 'free'),
         ];
 
-        $html = $this->view->renderString('admin.settings', ['config' => $config]);
-        $this->adminLayout('Settings', 'settings', $html);
+        $html = $this->view->renderString('admin.settings', [
+            'config' => $config,
+            'csrf' => $this->session->csrfToken(),
+        ]);
+        $this->adminLayout($res, 'Settings', 'settings', $html);
     }
 
     public function updateSettings(Request $req, Response $res): void
     {
-        Logger::info('Admin updated settings', ['admin_id' => $_SESSION['user']['id'] ?? null]);
+        Logger::info('Admin updated settings', ['admin_id' => $_SESSION['user_id'] ?? null]);
         $this->session->flash('success', 'Settings updated successfully.');
         $res->redirect('/admin/settings')->send();
     }
@@ -451,8 +455,9 @@ class AdminController
             'diskFree' => $diskFree,
             'diskTotal' => $diskTotal,
             'diskPercent' => $diskPercent,
+            'csrf' => $this->session->csrfToken(),
         ]);
-        $this->adminLayout('Health', 'health', $html);
+        $this->adminLayout($res, 'Health', 'health', $html);
     }
 
     public function blocklist(Request $req, Response $res): void
@@ -464,8 +469,11 @@ class AdminController
         } catch (\Throwable $e) {
         }
 
-        $html = $this->view->renderString('admin.blocklist', ['blocklist' => $blocklist]);
-        $this->adminLayout('Blocklist', 'blocklist', $html);
+        $html = $this->view->renderString('admin.blocklist', [
+            'blocklist' => $blocklist,
+            'csrf' => $this->session->csrfToken(),
+        ]);
+        $this->adminLayout($res, 'Blocklist', 'blocklist', $html);
     }
 
     public function addBlocklist(Request $req, Response $res): void
@@ -626,8 +634,9 @@ class AdminController
             'page' => $page,
             'totalPages' => $totalPages,
             'total' => $total,
+            'csrf' => $this->session->csrfToken(),
         ]);
-        $this->adminLayout('Audit Logs', 'logs', $html);
+        $this->adminLayout($res, 'Audit Logs', 'logs', $html);
     }
 
     private function checkDb(): array
