@@ -463,7 +463,7 @@ class LinkController
             $this->session->flash('error', 'Link not found.');
         }
 
-        $response->back();
+        $response->redirect('/links');
     }
 
     public function forceDelete(Request $request, Response $response, array $params): void
@@ -485,7 +485,7 @@ class LinkController
 
         if ($link !== null && $link->workspace_id === $workspaceId) {
             $this->db()->prepare('DELETE FROM link_clicks WHERE link_id = :id')->execute([':id' => $link->id]);
-            $link->delete();
+            $link->forceDelete();
             Logger::warning('Link permanently deleted', ['link_id' => $id, 'slug' => $link->slug]);
             $this->session->flash('success', 'Link permanently deleted.');
         } else {
