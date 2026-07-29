@@ -56,7 +56,7 @@
     </div>
   </nav>
 
-  <main id="main-content" role="main">
+  <main id="main-content" role="main" class="container">
     <?php if (!empty($flash)): ?>
     <div class="flash-container">
       <?php foreach ($flash as $type => $message): ?>
