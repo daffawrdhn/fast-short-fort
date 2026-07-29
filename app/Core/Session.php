@@ -159,3 +159,13 @@ class Session
         unset($_SESSION['_remember_me']);
     }
 }
+
+namespace {
+    use App\Core\Session;
+    if (!function_exists('session')) {
+        function session(): Session
+        {
+            return Session::getInstance();
+        }
+    }
+}
