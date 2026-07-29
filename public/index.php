@@ -61,6 +61,22 @@ $router->get('/login', [\App\Controllers\Web\AuthController::class, 'showLoginFo
 $router->post('/login', [\App\Controllers\Web\AuthController::class, 'login']);
 $router->get('/register', [\App\Controllers\Web\AuthController::class, 'showRegisterForm'])->name('register');
 $router->post('/register', [\App\Controllers\Web\AuthController::class, 'register']);
+$router->get('/qrcode', function (Request $req, Response $res) {
+    $url = $req->query('url', '');
+    if (empty($url)) {
+        $res->status(400)->body('URL is required.');
+        return;
+    }
+    $renderer = new \BaconQrCode\Renderer\Image\ImageRenderer(
+        new \BaconQrCode\Renderer\RendererStyle\RendererStyle(300),
+        new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
+    );
+    $writer = new \BaconQrCode\Writer($renderer);
+    $svg = $writer->writeString($url);
+    $res->header('Content-Type', 'image/svg+xml');
+    $res->body($svg);
+});
+$router->get('/links/qr/{id}/{format}', [\App\Controllers\Web\LinkController::class, 'downloadQRCode']);
 $router->post('/logout', [\App\Controllers\Web\AuthController::class, 'logout'])->name('logout');
 $router->get('/verify-email', [\App\Controllers\Web\AuthController::class, 'showVerifyEmail'])->name('verify.email');
 $router->get('/verify-email/{token}', [\App\Controllers\Web\AuthController::class, 'verifyEmail']);

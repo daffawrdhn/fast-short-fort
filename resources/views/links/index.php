@@ -98,7 +98,7 @@
                     <a href="/links/<?= $this->escape((string) $link['id']) ?>/edit" class="btn btn-icon btn-sm" aria-label="Edit link" title="Edit link">&#x270F;&#xFE0F;</a>
                     <a href="/links/<?= $this->escape((string) $link['id']) ?>/toggle" class="btn btn-icon btn-sm" aria-label="Toggle active status" title="<?= $link['is_active'] ? 'Disable' : 'Enable' ?>"><?= $link['is_active'] ? '&#x23F8;&#xFE0F;' : '&#x25B6;&#xFE0F;' ?></a>
                     <a href="/links/<?= $this->escape((string) $link['id']) ?>/delete" class="btn btn-icon btn-sm btn-danger-icon" aria-label="Delete link" title="Delete link" onclick="return confirm('Move this link to trash?')">&#x1F5D1;&#xFE0F;</a>
-                    <button class="btn btn-icon btn-sm" aria-label="Show QR code" title="Show QR code" onclick="showQR('<?= $this->escape($shortUrl) ?>', '<?= $this->escape($link['slug']) ?>')">&#x1F4F1;</button>
+                    <button class="btn btn-icon btn-sm" aria-label="Show QR code" title="Show QR code" onclick="showQR('<?= $this->escape($shortUrl) ?>', '<?= $this->escape((string) $link['id']) ?>')">&#x1F4F1;</button>
                   </div>
                 </td>
               </tr>
@@ -148,15 +148,15 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-function showQR(url, slug) {
+function showQR(url, id) {
   var modal = document.getElementById('qrcode-modal');
   var img = document.getElementById('qrcode-image');
   var downloadPng = document.getElementById('qrcode-download-png');
   var downloadSvg = document.getElementById('qrcode-download-svg');
   if (modal) modal.style.display = 'flex';
   if (img) img.src = '/qrcode?url=' + encodeURIComponent(url);
-  if (downloadPng) downloadPng.href = '/links/qr/' + slug + '/png';
-  if (downloadSvg) downloadSvg.href = '/links/qr/' + slug + '/svg';
+  if (downloadPng) downloadPng.href = '/links/qr/' + id + '/png';
+  if (downloadSvg) downloadSvg.href = '/links/qr/' + id + '/svg';
 }
 </script>
 <?php $this->endSection(); ?>
