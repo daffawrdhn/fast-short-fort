@@ -67,6 +67,7 @@ class ProfileController
 
         if ($name !== '') {
             $user->update(['name' => $name]);
+            $this->session->set('user_name', $name);
         }
 
         if ($email !== '' && $email !== $user->email) {
@@ -82,6 +83,7 @@ class ProfileController
                 return;
             }
             $user->update(['email' => $email]);
+            $this->session->set('user_email', $email);
         }
 
         if ($password !== '') {
@@ -90,8 +92,8 @@ class ProfileController
                 $res->redirect('/profile');
                 return;
             }
-            if (strlen($password) < 8 || !preg_match('/[A-Z]/', $password) || !preg_match('/[a-z]/', $password) || !preg_match('/[0-9]/', $password)) {
-                $this->session->flash('error', 'Password must be at least 8 characters with uppercase, lowercase, and a number.');
+            if (strlen($password) < 8) {
+                $this->session->flash('error', 'Password must be at least 8 characters.');
                 $res->redirect('/profile');
                 return;
             }
