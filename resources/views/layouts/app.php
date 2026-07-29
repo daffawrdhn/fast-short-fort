@@ -44,7 +44,12 @@
             <li><a href="/profile" role="menuitem">Profile</a></li>
             <li><a href="/settings" role="menuitem">Settings</a></li>
             <li><hr class="dropdown-divider"></li>
-            <li><a href="/logout" role="menuitem" class="dropdown-danger">Logout</a></li>
+            <li>
+              <form id="logout-form" action="/logout" method="POST" style="display: none;">
+                <input type="hidden" name="_csrf" value="<?= htmlspecialchars(session()->csrfToken(), ENT_QUOTES, 'UTF-8') ?>">
+              </form>
+              <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" role="menuitem" class="dropdown-danger">Logout</a>
+            </li>
           </ul>
         </div>
       </div>
