@@ -35,12 +35,13 @@
     <div class="card-body">
       <form action="/links/bulk" method="POST" id="bulk-form" aria-label="Bulk actions">
         <input type="hidden" name="_csrf" value="<?= $this->escape($csrf ?? session()->csrfToken()) ?>">
+      </form>
 
         <div class="bulk-toolbar" role="toolbar" aria-label="Bulk actions toolbar">
           <div class="bulk-actions">
-            <button type="submit" name="action" value="delete" class="btn btn-sm btn-danger" disabled id="bulk-delete" aria-label="Delete selected">Delete</button>
-            <button type="submit" name="action" value="enable" class="btn btn-sm btn-success" disabled id="bulk-enable" aria-label="Enable selected">Enable</button>
-            <button type="submit" name="action" value="disable" class="btn btn-sm btn-warning" disabled id="bulk-disable" aria-label="Disable selected">Disable</button>
+            <button type="submit" name="action" value="delete" form="bulk-form" class="btn btn-sm btn-danger" disabled id="bulk-delete" aria-label="Delete selected">Delete</button>
+            <button type="submit" name="action" value="enable" form="bulk-form" class="btn btn-sm btn-success" disabled id="bulk-enable" aria-label="Enable selected">Enable</button>
+            <button type="submit" name="action" value="disable" form="bulk-form" class="btn btn-sm btn-warning" disabled id="bulk-disable" aria-label="Disable selected">Disable</button>
             <span class="bulk-separator"></span>
             <a href="/links/export/csv" class="btn btn-sm btn-outline" aria-label="Export as CSV">Export CSV</a>
             <a href="/links/export/json" class="btn btn-sm btn-outline" aria-label="Export as JSON">Export JSON</a>
@@ -78,7 +79,7 @@
                 $shortUrl = ($baseUrl ?? '') . '/' . $link['slug'];
               ?>
               <tr>
-                <td class="td-checkbox"><input type="checkbox" name="ids[]" value="<?= $this->escape((string) $link['id']) ?>" class="select-item" aria-label="Select link <?= $this->escape($link['slug']) ?>"></td>
+                <td class="td-checkbox"><input type="checkbox" name="ids[]" value="<?= $this->escape((string) $link['id']) ?>" form="bulk-form" class="select-item" aria-label="Select link <?= $this->escape($link['slug']) ?>"></td>
                 <td class="td-short-url">
                   <div class="short-url-cell">
                     <a href="/<?= $this->escape($link['slug']) ?>" target="_blank" rel="noopener" class="short-url-label"><?= $this->escape($link['slug']) ?></a>
@@ -125,7 +126,6 @@
           <a href="/links/create" class="btn btn-primary">Create your first link</a>
         </div>
         <?php endif; ?>
-      </form>
     </div>
   </div>
 
