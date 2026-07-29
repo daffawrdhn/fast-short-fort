@@ -96,8 +96,14 @@
                   <div class="action-buttons">
                     <a href="/links/<?= $this->escape((string) $link['id']) ?>" class="btn btn-icon btn-sm" aria-label="View details" title="View details">&#x1F50D;</a>
                     <a href="/links/<?= $this->escape((string) $link['id']) ?>/edit" class="btn btn-icon btn-sm" aria-label="Edit link" title="Edit link">&#x270F;&#xFE0F;</a>
-                    <a href="/links/<?= $this->escape((string) $link['id']) ?>/toggle" class="btn btn-icon btn-sm" aria-label="Toggle active status" title="<?= $link['is_active'] ? 'Disable' : 'Enable' ?>"><?= $link['is_active'] ? '&#x23F8;&#xFE0F;' : '&#x25B6;&#xFE0F;' ?></a>
-                    <a href="/links/<?= $this->escape((string) $link['id']) ?>/delete" class="btn btn-icon btn-sm btn-danger-icon" aria-label="Delete link" title="Delete link" onclick="return confirm('Move this link to trash?')">&#x1F5D1;&#xFE0F;</a>
+                    <form action="/links/<?= $this->escape((string) $link['id']) ?>/toggle" method="POST" style="display: inline; margin: 0; padding: 0;">
+                      <input type="hidden" name="_csrf" value="<?= htmlspecialchars(\App\Core\Session::getInstance()->csrfToken(), ENT_QUOTES, 'UTF-8') ?>">
+                      <button type="submit" class="btn btn-icon btn-sm" aria-label="Toggle active status" title="<?= $link['is_active'] ? 'Disable' : 'Enable' ?>" style="border: none; background: transparent; padding: 0; cursor: pointer;"><?= $link['is_active'] ? '&#x23F8;&#xFE0F;' : '&#x25B6;&#xFE0F;' ?></button>
+                    </form>
+                    <form action="/links/<?= $this->escape((string) $link['id']) ?>/delete" method="POST" style="display: inline; margin: 0; padding: 0;" onsubmit="return confirm('Move this link to trash?');">
+                      <input type="hidden" name="_csrf" value="<?= htmlspecialchars(\App\Core\Session::getInstance()->csrfToken(), ENT_QUOTES, 'UTF-8') ?>">
+                      <button type="submit" class="btn btn-icon btn-sm btn-danger-icon" aria-label="Delete link" title="Delete link" style="border: none; background: transparent; padding: 0; cursor: pointer;">&#x1F5D1;&#xFE0F;</button>
+                    </form>
                     <button type="button" class="btn btn-icon btn-sm" aria-label="Show QR code" title="Show QR code" onclick="showQR('<?= $this->escape($shortUrl) ?>', '<?= $this->escape((string) $link['id']) ?>')">&#x1F4F1;</button>
                   </div>
                 </td>

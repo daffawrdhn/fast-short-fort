@@ -6,7 +6,10 @@
     <h1 class="page-title">Link Details</h1>
     <div class="page-actions">
       <a href="/links/<?= $this->escape((string) $link->id) ?>/edit" class="btn btn-primary" aria-label="Edit link">Edit</a>
-      <a href="/links/<?= $this->escape((string) $link->id) ?>/delete" class="btn btn-danger" aria-label="Delete link" onclick="return confirm('Move this link to trash?')">Delete</a>
+      <form action="/links/<?= $this->escape((string) $link->id) ?>/delete" method="POST" style="display: inline;" onsubmit="return confirm('Move this link to trash?');">
+        <input type="hidden" name="_csrf" value="<?= htmlspecialchars(\App\Core\Session::getInstance()->csrfToken(), ENT_QUOTES, 'UTF-8') ?>">
+        <button type="submit" class="btn btn-danger" aria-label="Delete link">Delete</button>
+      </form>
       <a href="/links" class="btn btn-outline" aria-label="Back to links">&larr; Back</a>
     </div>
   </div>
