@@ -104,39 +104,23 @@ Proses instalasi manual **FORT sangat mudah** (tidak ribet) karena menggunakan *
 
 ### Langkah-Langkah
 
-1. **Clone & Install Dependencies**
-   ```bash
-   git clone https://github.com/daffawrdhn/fast-short-fort.git
-   cd fast-short-fort
-   composer install --no-dev --optimize-autoloader
-   ```
+Untuk mempermudah instalasi, kami telah menyediakan script instalasi interaktif. Anda cukup menjalankan:
 
-2. **Konfigurasi Environment**
-   ```bash
-   cp .env.example .env
-   # Buka dan edit file .env (DB_DRIVER=sqlite sudah menjadi default)
-   ```
+```bash
+git clone https://github.com/daffawrdhn/fast-short-fort.git
+cd fast-short-fort
+chmod +x install.sh
+./install.sh
+```
 
-3. **Set File Permissions**
-   Direktori penyimpanan harus bisa ditulis oleh web server (misal: `www-data` atau `nginx`):
-   ```bash
-   sudo chown -R www-data:www-data storage/
-   sudo chmod -R 775 storage/
-   ```
+Script otomatis tersebut akan meminta beberapa input (seperti nama web, URL web, dan jenis database), kemudian script akan otomatis menjalankan composer, mengatur permission, dan melakukan generate database (migrasi).
 
-4. **Migrasi Database**
-   ```bash
-   php database/migrate.php
-   ```
+Jika webserver Anda berjalan di bawah user tertentu (contoh: `www-data` di Ubuntu), jangan lupa sesuaikan kepemilikan folder storage agar web bisa menulis file cache/logs:
+```bash
+sudo chown -R www-data:www-data storage/
+```
 
-5. **Cronjob (Pembersihan Link Kedaluwarsa)**
-   Tambahkan ke crontab server Anda (`crontab -e`):
-   ```
-   * * * * * php /path/to/fort/cron/cleanup.php >> /dev/null 2>&1
-   ```
-
-### Saran Pengembangan (Suggestion)
-Jika instalasi manual dirasa memiliki beberapa langkah yang berulang, disarankan ke depannya project ini menambahkan sebuah **Shell Script Installer** (contoh: `install.sh` atau `php bin/setup`). Script ini akan otomatis menjalankan composer, copy .env, setting permission `chmod`, dan generate SQLite dalam sekali eksekusi (1-Click Install), sehingga membuatnya 100% instan untuk pemula di VPS.
+**Selesai!** Kunjungi `http://domain-anda.com/install` di browser untuk membuat akun Admin pertama.
 
 ---
 
