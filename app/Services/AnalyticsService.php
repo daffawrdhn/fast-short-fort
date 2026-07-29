@@ -284,11 +284,110 @@ class AnalyticsService
         $stmt->execute($params);
         $topLinks = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        // Workspace countries breakdown
+        $stmt = $this->db->prepare("
+            SELECT lc.country, COUNT(*) AS count
+            FROM link_clicks lc
+            JOIN links l ON l.id = lc.link_id
+            WHERE l.workspace_id = :workspace_id {$dateJoin}
+            GROUP BY lc.country
+            ORDER BY count DESC
+            LIMIT 50
+        ");
+        $stmt->execute($params);
+        $countries = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Workspace devices breakdown
+        $stmt = $this->db->prepare("
+            SELECT lc.device_type, COUNT(*) AS count
+            FROM link_clicks lc
+            JOIN links l ON l.id = lc.link_id
+            WHERE l.workspace_id = :workspace_id {$dateJoin}
+            GROUP BY lc.device_type
+            ORDER BY count DESC
+        ");
+        $stmt->execute($params);
+        $devices = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Workspace browsers breakdown
+        $stmt = $this->db->prepare("
+            SELECT lc.browser, COUNT(*) AS count
+            FROM link_clicks lc
+            JOIN links l ON l.id = lc.link_id
+            WHERE l.workspace_id = :workspace_id {$dateJoin}
+            GROUP BY lc.browser
+            ORDER BY count DESC
+            LIMIT 20
+        ");
+        $stmt->execute($params);
+        $browsers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Workspace OS breakdown
+        $stmt = $this->db->prepare("
+            SELECT lc.os, COUNT(*) AS count
+            FROM link_clicks lc
+            JOIN links l ON l.id = lc.link_id
+            WHERE l.workspace_id = :workspace_id {$dateJoin}
+            GROUP BY lc.os
+            ORDER BY count DESC
+            LIMIT 20
+        ");
+        $stmt->execute($params);
+        $os = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Workspace referrers breakdown
+        $stmt = $this->db->prepare("
+            SELECT
+                CASE
+                    WHEN lc.referrer IS NULL OR lc.referrer = '' THEN 'Direct'
+                    WHEN lc.referrer LIKE '%google.%' THEN 'Google'
+                    WHEN lc.referrer LIKE '%facebook.%' OR lc.referrer LIKE '%fb.%' THEN 'Facebook'
+                    WHEN lc.referrer LIKE '%twitter.%' OR lc.referrer LIKE '%x.%' THEN 'Twitter/X'
+                    WHEN lc.referrer LIKE '%linkedin.%' THEN 'LinkedIn'
+                    WHEN lc.referrer LIKE '%instagram.%' THEN 'Instagram'
+                    WHEN lc.referrer LIKE '%youtube.%' THEN 'YouTube'
+                    WHEN lc.referrer LIKE '%reddit.%' THEN 'Reddit'
+                    WHEN lc.referrer LIKE '%t.co%' THEN 'Twitter/X'
+                    ELSE SUBSTR(lc.referrer, 1, 100)
+                END AS referrer_group,
+                COUNT(*) AS count
+            FROM link_clicks lc
+            JOIN links l ON l.id = lc.link_id
+            WHERE l.workspace_id = :workspace_id {$dateJoin}
+            GROUP BY referrer_group
+            ORDER BY count DESC
+            LIMIT 20
+        ");
+        $stmt->execute($params);
+        $referrers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Workspace clicks over time
+        $driver = $this->db->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $dateExpr = $driver === 'pgsql'
+            ? "TO_CHAR(lc.clicked_at, 'YYYY-MM-DD')"
+            : "STRFTIME('%Y-%m-%d', lc.clicked_at)";
+        $stmt = $this->db->prepare("
+            SELECT {$dateExpr} AS label, COUNT(*) AS count
+            FROM link_clicks lc
+            JOIN links l ON l.id = lc.link_id
+            WHERE l.workspace_id = :workspace_id {$dateJoin}
+            GROUP BY label
+            ORDER BY label ASC
+        ");
+        $stmt->execute($params);
+        $clicksOverTime = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
         return [
             'total_clicks' => (int) ($summary['total_clicks'] ?? 0),
             'unique_clicks' => (int) ($summary['unique_clicks'] ?? 0),
             'clicked_links' => (int) ($summary['clicked_links'] ?? 0),
             'top_links' => $topLinks,
+            'countries_data' => $countries,
+            'devices' => $devices,
+            'browsers' => $browsers,
+            'os' => $os,
+            'referrers' => $referrers,
+            'clicks_over_time' => $clicksOverTime,
         ];
     }
 
