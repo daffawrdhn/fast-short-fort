@@ -162,6 +162,9 @@ class LinkController
         }
 
         $originalUrl = trim($request->input('original_url', ''));
+        if ($originalUrl !== '' && !str_starts_with(strtolower($originalUrl), 'http://') && !str_starts_with(strtolower($originalUrl), 'https://')) {
+            $originalUrl = 'https://' . $originalUrl;
+        }
         $customSlug = trim($request->input('slug', ''));
         $expiration = $request->input('expires_at', null);
         $password = $request->input('password', '');
