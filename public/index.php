@@ -119,6 +119,7 @@ $router->group('', function (Router $router) {
     $router->post('/links/{id}/force-delete', [\App\Controllers\Web\LinkController::class, 'forceDelete']);
     $router->post('/links/{id}/toggle', [\App\Controllers\Web\LinkController::class, 'toggleActive']);
     $router->get('/links/{id}/qrcode', [\App\Controllers\Web\LinkController::class, 'downloadQRCode']);
+    $router->post('/links/bulk', [\App\Controllers\Web\LinkController::class, 'bulkAction']);
     $router->post('/links/bulk/delete', [\App\Controllers\Web\LinkController::class, 'bulkDelete']);
     $router->post('/links/bulk/enable', [\App\Controllers\Web\LinkController::class, 'bulkEnable']);
     $router->post('/links/bulk/disable', [\App\Controllers\Web\LinkController::class, 'bulkDisable']);

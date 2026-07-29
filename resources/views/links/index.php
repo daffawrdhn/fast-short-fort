@@ -38,9 +38,9 @@
 
         <div class="bulk-toolbar" role="toolbar" aria-label="Bulk actions toolbar">
           <div class="bulk-actions">
-            <button type="submit" formaction="/links/bulk/delete" class="btn btn-sm btn-danger" disabled id="bulk-delete" aria-label="Delete selected">Delete</button>
-            <button type="submit" formaction="/links/bulk/enable" class="btn btn-sm btn-success" disabled id="bulk-enable" aria-label="Enable selected">Enable</button>
-            <button type="submit" formaction="/links/bulk/disable" class="btn btn-sm btn-warning" disabled id="bulk-disable" aria-label="Disable selected">Disable</button>
+            <button type="submit" name="action" value="delete" class="btn btn-sm btn-danger" disabled id="bulk-delete" aria-label="Delete selected">Delete</button>
+            <button type="submit" name="action" value="enable" class="btn btn-sm btn-success" disabled id="bulk-enable" aria-label="Enable selected">Enable</button>
+            <button type="submit" name="action" value="disable" class="btn btn-sm btn-warning" disabled id="bulk-disable" aria-label="Disable selected">Disable</button>
             <span class="bulk-separator"></span>
             <a href="/links/export/csv" class="btn btn-sm btn-outline" aria-label="Export as CSV">Export CSV</a>
             <a href="/links/export/json" class="btn btn-sm btn-outline" aria-label="Export as JSON">Export JSON</a>
@@ -98,12 +98,19 @@
                     <a href="/links/<?= $this->escape((string) $link['id']) ?>/edit" class="btn btn-icon btn-sm" aria-label="Edit link" title="Edit link">&#x270F;&#xFE0F;</a>
                     <form action="/links/<?= $this->escape((string) $link['id']) ?>/toggle" method="POST" style="display: inline; margin: 0; padding: 0;">
                       <input type="hidden" name="_csrf" value="<?= htmlspecialchars(\App\Core\Session::getInstance()->csrfToken(), ENT_QUOTES, 'UTF-8') ?>">
-                      <button type="submit" class="btn btn-icon btn-sm" aria-label="Toggle active status" title="<?= $link['is_active'] ? 'Disable' : 'Enable' ?>" style="border: none; background: transparent; padding: 0; cursor: pointer;"><?= $link['is_active'] ? '&#x23F8;&#xFE0F;' : '&#x25B6;&#xFE0F;' ?></button>
+                      <button type="submit" class="btn btn-icon btn-sm" aria-label="Toggle active status" title="<?= $link['is_active'] ? 'Disable (Pause)' : 'Enable (Play)' ?>" style="border: none; background: transparent; padding: 0; cursor: pointer;"><?= $link['is_active'] ? '&#x23F8;&#xFE0F;' : '&#x25B6;&#xFE0F;' ?></button>
                     </form>
+                    <?php if ($link['is_active']): ?>
                     <form action="/links/<?= $this->escape((string) $link['id']) ?>/delete" method="POST" style="display: inline; margin: 0; padding: 0;" onsubmit="return confirm('Move this link to trash?');">
                       <input type="hidden" name="_csrf" value="<?= htmlspecialchars(\App\Core\Session::getInstance()->csrfToken(), ENT_QUOTES, 'UTF-8') ?>">
-                      <button type="submit" class="btn btn-icon btn-sm btn-danger-icon" aria-label="Delete link" title="Delete link" style="border: none; background: transparent; padding: 0; cursor: pointer;">&#x1F5D1;&#xFE0F;</button>
+                      <button type="submit" class="btn btn-icon btn-sm btn-danger-icon" aria-label="Delete link" title="Move to trash" style="border: none; background: transparent; padding: 0; cursor: pointer;">&#x1F5D1;&#xFE0F;</button>
                     </form>
+                    <?php else: ?>
+                    <form action="/links/<?= $this->escape((string) $link['id']) ?>/force-delete" method="POST" style="display: inline; margin: 0; padding: 0;" onsubmit="return confirm('Permanently delete this link? This action cannot be undone.');">
+                      <input type="hidden" name="_csrf" value="<?= htmlspecialchars(\App\Core\Session::getInstance()->csrfToken(), ENT_QUOTES, 'UTF-8') ?>">
+                      <button type="submit" class="btn btn-icon btn-sm btn-danger-icon" aria-label="Permanently delete link" title="Permanently delete" style="border: none; background: transparent; padding: 0; cursor: pointer; color: #ef4444;">&#x274C;</button>
+                    </form>
+                    <?php endif; ?>
                     <button type="button" class="btn btn-icon btn-sm" aria-label="Show QR code" title="Show QR code" onclick="showQR('<?= $this->escape($shortUrl) ?>', '<?= $this->escape((string) $link['id']) ?>')">&#x1F4F1;</button>
                   </div>
                 </td>

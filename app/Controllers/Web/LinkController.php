@@ -489,6 +489,20 @@ class LinkController
         $response->redirect('/links');
     }
 
+    public function bulkAction(Request $request, Response $response): void
+    {
+        $action = $request->input('action', '');
+        if ($action === 'delete') {
+            $this->bulkDelete($request, $response);
+        } elseif ($action === 'enable') {
+            $this->bulkEnable($request, $response);
+        } elseif ($action === 'disable') {
+            $this->bulkDisable($request, $response);
+        } else {
+            $response->redirect('/links');
+        }
+    }
+
     public function bulkDelete(Request $request, Response $response): void
     {
         $workspaceId = $this->getWorkspaceId();
