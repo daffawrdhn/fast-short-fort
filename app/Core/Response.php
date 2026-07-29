@@ -105,7 +105,7 @@ class Response
             setcookie(...$cookie);
         }
 
-        if ($this->body !== null) {
+        if ($this->body !== null && strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'HEAD') {
             echo $this->body;
         }
     }

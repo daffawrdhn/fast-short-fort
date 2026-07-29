@@ -107,7 +107,10 @@ class Router
 
         foreach ($this->routes as $route) {
             if ($route['method'] !== $method) {
-                continue;
+                // Map HEAD request to GET route
+                if (!($method === 'HEAD' && $route['method'] === 'GET')) {
+                    continue;
+                }
             }
 
             if (preg_match($route['pattern'], $uri, $matches)) {
