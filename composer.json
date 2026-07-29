@@ -21,7 +21,7 @@
     },
     "scripts": {
         "lint": "phpcs --standard=PSR12 app/",
-        "test": "phpunit tests/",
+        "test": "phpunit tests/Unit/",
         "migrate": "php database/migrate.php"
     },
     "config": {

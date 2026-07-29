@@ -57,6 +57,10 @@ assert_true($db !== null, 'Database singleton created');
 assert_true($db->getPdo() !== null, 'PDO connection established');
 assert_equals('sqlite', Env::get('DB_DRIVER', 'sqlite'), 'DB driver is sqlite');
 
+// Run migrations on the test database instance
+$migration = new \App\Core\Migration($db->getPdo());
+$migration->run();
+
 $hash = Hash::make('test_password');
 assert_true($hash !== '', 'Hash::make returns non-empty string');
 assert_true(Hash::check('test_password', $hash), 'Hash::check matches correct password');

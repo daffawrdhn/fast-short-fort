@@ -229,12 +229,12 @@ class AdminController
                 $user->update(['email' => $email]);
             }
             if ($password !== '') {
-            if (strlen($password) < 8 || !preg_match('/[A-Z]/', $password) || !preg_match('/[a-z]/', $password) || !preg_match('/[0-9]/', $password)) {
-                $this->session->flash('error', 'Password must be at least 8 characters with uppercase, lowercase, and a number.');
-                $res->redirect('/admin/users');
-                return;
-            }
-            $user->update(['password_hash' => Hash::make($password)]);
+                if (strlen($password) < 8 || !preg_match('/[A-Z]/', $password) || !preg_match('/[a-z]/', $password) || !preg_match('/[0-9]/', $password)) {
+                    $this->session->flash('error', 'Password must be at least 8 characters with uppercase, lowercase, and a number.');
+                    $res->redirect('/admin/users');
+                    return;
+                }
+                $user->update(['password_hash' => Hash::make($password)]);
             }
             $user->update(['is_admin' => $isAdmin ? 1 : 0]);
             $this->session->flash('success', 'User updated successfully.');

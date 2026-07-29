@@ -31,7 +31,9 @@ class Database
             $this->driver = 'pgsql';
         } else {
             $path = Env::get('DB_SQLITE_PATH', 'storage/fort.sqlite');
-            $path = dirname(__DIR__, 2) . '/' . ltrim($path, '/');
+            if ($path !== ':memory:') {
+                $path = dirname(__DIR__, 2) . '/' . ltrim($path, '/');
+            }
             $this->pdo = new PDO("sqlite:{$path}", null, null, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
