@@ -93,44 +93,50 @@ Visit `http://localhost` and follow the installer wizard.
 
 ---
 
-## 📦 Manual Installation
+## 📦 Manual Installation (Linux / VPS / cPanel)
+
+Proses instalasi manual **FORT sangat mudah** (tidak ribet) karena menggunakan **SQLite** sebagai database bawaan, sehingga Anda tidak perlu repot setup MySQL/PostgreSQL. Namun, untuk mempermudah, ikuti langkah berikut:
 
 ### Requirements
 - PHP 8.2+
 - Composer
-- PostgreSQL 15+ **or** SQLite 3.x
-- Extensions: `pdo`, `pdo_pgsql`/`pdo_sqlite`, `json`, `mbstring`, `openssl`, `gd`, `curl`, `xml`, `bcmath`
+- Ekstensi PHP: `pdo`, `pdo_sqlite` (atau `pdo_pgsql`), `json`, `mbstring`, `openssl`, `gd`, `curl`, `xml`, `bcmath`, `imagick` (opsional untuk QR code).
 
-### Steps
+### Langkah-Langkah
 
-```bash
-git clone https://github.com/daffawrdhn/fast-short-fort.git
-cd fast-short-fort
-composer install
-```
+1. **Clone & Install Dependencies**
+   ```bash
+   git clone https://github.com/daffawrdhn/fast-short-fort.git
+   cd fast-short-fort
+   composer install --no-dev --optimize-autoloader
+   ```
 
-```bash
-cp .env.example .env
-# Edit .env — DB_DRIVER defaults to sqlite
-```
+2. **Konfigurasi Environment**
+   ```bash
+   cp .env.example .env
+   # Buka dan edit file .env (DB_DRIVER=sqlite sudah menjadi default)
+   ```
 
-```bash
-chmod -R 775 storage/
-```
+3. **Set File Permissions**
+   Direktori penyimpanan harus bisa ditulis oleh web server (misal: `www-data` atau `nginx`):
+   ```bash
+   sudo chown -R www-data:www-data storage/
+   sudo chmod -R 775 storage/
+   ```
 
-Visit `http://your-domain.com/install` and follow the wizard.
+4. **Migrasi Database**
+   ```bash
+   php database/migrate.php
+   ```
 
-### Or run migrations manually
+5. **Cronjob (Pembersihan Link Kedaluwarsa)**
+   Tambahkan ke crontab server Anda (`crontab -e`):
+   ```
+   * * * * * php /path/to/fort/cron/cleanup.php >> /dev/null 2>&1
+   ```
 
-```bash
-php database/migrate.php
-```
-
-### Cronjob (cleanup expired links, etc.)
-
-```
-* * * * * php /path/to/fort/cron/cleanup.php
-```
+### Saran Pengembangan (Suggestion)
+Jika instalasi manual dirasa memiliki beberapa langkah yang berulang, disarankan ke depannya project ini menambahkan sebuah **Shell Script Installer** (contoh: `install.sh` atau `php bin/setup`). Script ini akan otomatis menjalankan composer, copy .env, setting permission `chmod`, dan generate SQLite dalam sekali eksekusi (1-Click Install), sehingga membuatnya 100% instan untuk pemula di VPS.
 
 ---
 
