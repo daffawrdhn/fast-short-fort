@@ -110,6 +110,7 @@ $router->post('/twofa/disable', [\App\Controllers\Web\AuthController::class, 'di
 $router->group('', function (Router $router) {
     $router->get('/dashboard', [\App\Controllers\Web\DashboardController::class, 'index'])->name('dashboard');
     $router->get('/links', [\App\Controllers\Web\LinkController::class, 'index'])->name('links');
+    $router->get('/check-slug', [\App\Controllers\Web\LinkController::class, 'checkSlug']);
     $router->get('/links/create', [\App\Controllers\Web\LinkController::class, 'create'])->name('links.create');
     $router->post('/links', [\App\Controllers\Web\LinkController::class, 'store'])->name('links.store');
     $router->get('/links/{id}', [\App\Controllers\Web\LinkController::class, 'show'])->name('links.show');

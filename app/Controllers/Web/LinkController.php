@@ -342,6 +342,9 @@ class LinkController
         }
 
         $originalUrl = trim($request->input('original_url', ''));
+        if ($originalUrl !== '' && !str_starts_with(strtolower($originalUrl), 'http://') && !str_starts_with(strtolower($originalUrl), 'https://')) {
+            $originalUrl = 'https://' . $originalUrl;
+        }
         $slug = trim($request->input('slug', ''));
         $expiration = $request->input('expires_at', null);
         $password = $request->input('password', '');
@@ -853,6 +856,33 @@ class LinkController
 
         $this->session->flash('error', 'Invalid password.');
         $response->redirect('/links/password/' . $slug);
+    }
+
+    public function checkSlug(Request $request, Response $response): void
+    {
+        $workspaceId = $this->getWorkspaceId();
+        if ($workspaceId === null) {
+            $response->status(401)->json(['success' => false, 'message' => 'Unauthenticated.']);
+            return;
+        }
+
+        $slug = trim($request->query('slug', ''));
+        if ($slug === '') {
+            $response->json(['success' => false, 'message' => 'Slug is required.']);
+            return;
+        }
+
+        if (!$this->linkService->validateSlug($slug)) {
+            $response->json(['success' => false, 'message' => 'Invalid slug format.']);
+            return;
+        }
+
+        $available = $this->linkService->isSlugAvailable($slug, $workspaceId);
+        $response->json([
+            'success' => true,
+            'available' => $available,
+            'message' => $available ? 'Slug is available.' : 'Slug is already taken.'
+        ]);
     }
 
     private function buildShortUrl(string $slug): string
