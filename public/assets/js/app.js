@@ -182,6 +182,19 @@
     return fetchJSON(url, { method: 'DELETE' });
   };
 
+  function modalToggle () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-modal-toggle]');
+      if (!btn) return;
+      e.preventDefault();
+      var href = btn.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        var modal = document.querySelector(href);
+        if (modal) modal.classList.add('open');
+      }
+    });
+  }
+
   function qrModal () {
     document.addEventListener('click', function (e) {
       var btn = e.target.closest('[data-qr-modal]');
@@ -194,20 +207,21 @@
     document.addEventListener('click', function (e) {
       var overlay = e.target.closest('.modal-overlay');
       if (overlay && e.target === overlay) {
-        overlay.classList.remove('open');
+        overlay.closest('.modal').classList.remove('open');
       }
     });
 
-    document.querySelectorAll('.modal-close').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var modal = this.closest('.modal-overlay');
+    document.querySelectorAll('[data-modal-close], .modal-close').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        var modal = this.closest('.modal');
         if (modal) modal.classList.remove('open');
       });
     });
 
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') {
-        document.querySelectorAll('.modal-overlay.open').forEach(function (m) {
+        document.querySelectorAll('.modal.open').forEach(function (m) {
           m.classList.remove('open');
         });
       }
@@ -352,6 +366,7 @@
   ready(userDropdown);
   ready(flashDismiss);
   ready(formValidation);
+  ready(modalToggle);
   ready(qrModal);
   ready(bulkActions);
   ready(searchInput);
