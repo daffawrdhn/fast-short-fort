@@ -46,6 +46,12 @@ class Response
         return $this;
     }
 
+    public function body(string $content): self
+    {
+        $this->body = $content;
+        return $this;
+    }
+
     public function view(string $template, array $data = []): self
     {
         return View::getInstance()->render($template, $data);

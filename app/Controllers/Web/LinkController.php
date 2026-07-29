@@ -624,7 +624,7 @@ class LinkController
 
         $response->header('Content-Type', 'text/csv; charset=utf-8');
         $response->header('Content-Disposition', 'attachment; filename="links-export.csv"');
-        echo $output;
+        $response->body($output);
     }
 
     public function toggleActive(Request $request, Response $response, array $params): void
@@ -683,7 +683,7 @@ class LinkController
 
             $response->header('Content-Type', 'image/svg+xml');
             $response->header('Content-Disposition', 'attachment; filename="qr-' . $link->slug . '.svg"');
-            echo $svg;
+            $response->body($svg);
             return;
         }
 
@@ -696,7 +696,7 @@ class LinkController
 
         $response->header('Content-Type', 'image/png');
         $response->header('Content-Disposition', 'attachment; filename="qr-' . $link->slug . '.png"');
-        echo $png;
+        $response->body($png);
     }
 
     public function redirect(Request $request, Response $response, array $params): void
@@ -756,7 +756,7 @@ class LinkController
                 . 'window.location.href = ' . json_encode($targetUrl) . ';'
                 . 'setTimeout(function(){ window.location.href = ' . json_encode($webUrl) . '; }, 500);'
                 . '</script></head><body></body></html>';
-            echo $html;
+            $response->body($html);
             return;
         }
 
@@ -769,10 +769,11 @@ class LinkController
                 'utm_content' => $link->utm_content,
             ]);
 
-            echo $this->view->renderString('links.interstitial', [
+            $html = $this->view->renderString('links.interstitial', [
                 'targetUrl' => $targetUrl,
                 'link' => $link,
             ]);
+            $response->body($html);
             return;
         }
 
