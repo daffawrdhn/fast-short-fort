@@ -435,15 +435,15 @@ class AdminController
         $extensions['imagick'] = extension_loaded('imagick');
 
         $directories = [
-            'storage/' => is_writable(dirname(__DIR__, 2) . '/storage'),
-            'storage/logs/' => is_writable(dirname(__DIR__, 2) . '/storage/logs'),
-            'storage/cache/' => is_writable(dirname(__DIR__, 2) . '/storage/cache'),
+            'storage/' => is_writable(dirname(__DIR__, 3) . '/storage'),
+            'storage/logs/' => is_writable(dirname(__DIR__, 3) . '/storage/logs'),
+            'storage/cache/' => is_writable(dirname(__DIR__, 3) . '/storage/cache'),
         ];
 
         $dbStatus = $this->checkDb();
 
-        $diskFree = disk_free_space(dirname(__DIR__, 2));
-        $diskTotal = disk_total_space(dirname(__DIR__, 2));
+        $diskFree = disk_free_space(dirname(__DIR__, 3));
+        $diskTotal = disk_total_space(dirname(__DIR__, 3));
         $diskPercent = $diskTotal > 0 ? round(($diskTotal - $diskFree) / $diskTotal * 100, 1) : 0;
 
         $html = $this->view->renderString('admin.health', [
@@ -654,7 +654,7 @@ class AdminController
 
     private function getDiskUsage(): array
     {
-        $base = dirname(__DIR__, 2);
+        $base = dirname(__DIR__, 3);
         $free = @disk_free_space($base);
         $total = @disk_total_space($base);
         $used = $total - $free;
