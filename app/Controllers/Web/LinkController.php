@@ -753,8 +753,8 @@ class LinkController
             ]);
 
             $html = '<!DOCTYPE html><html><head><script>'
-                . 'window.location.href = "' . addslashes($targetUrl) . '";'
-                . 'setTimeout(function(){ window.location.href = "' . addslashes($webUrl) . '"; }, 500);'
+                . 'window.location.href = ' . json_encode($targetUrl) . ';'
+                . 'setTimeout(function(){ window.location.href = ' . json_encode($webUrl) . '; }, 500);'
                 . '</script></head><body></body></html>';
             echo $html;
             return;

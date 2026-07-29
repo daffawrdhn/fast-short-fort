@@ -70,7 +70,7 @@ class RateLimitMiddleware extends Middleware
     private function getAttempts(string $key): int
     {
         $db = Database::connection();
-        $driver = (new Database())->getDriver();
+        $driver = Database::getInstance()->getDriver();
 
         if ($driver === 'sqlite') {
             $stmt = $db->prepare(
@@ -91,7 +91,7 @@ class RateLimitMiddleware extends Middleware
     private function incrementAttempts(string $key): void
     {
         $db = Database::connection();
-        $driver = (new Database())->getDriver();
+        $driver = Database::getInstance()->getDriver();
 
         $stmt = $db->prepare('SELECT id, attempts FROM rate_limits WHERE key_name = :key');
         $stmt->execute([':key' => $key]);
@@ -125,7 +125,7 @@ class RateLimitMiddleware extends Middleware
     private function getRetryAfter(string $key): int
     {
         $db = Database::connection();
-        $driver = (new Database())->getDriver();
+        $driver = Database::getInstance()->getDriver();
 
         if ($driver === 'sqlite') {
             $stmt = $db->prepare(

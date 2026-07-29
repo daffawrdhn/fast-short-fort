@@ -42,41 +42,38 @@ class PasswordReset
 
     public static function findByToken(string $token): ?self
     {
-        $stmt = self::db()->prepare('
+        $driver = self::db()->getAttribute(\PDO::ATTR_DRIVER_NAME);
+        $dateExpr = $driver === 'pgsql' ? 'CURRENT_TIMESTAMP' : "datetime('now')";
+
+        $stmt = self::db()->prepare("
             SELECT * FROM password_resets
-            WHERE token = :token AND expires_at > datetime(\'now\')
+            WHERE token = :token AND expires_at > {$dateExpr}
             ORDER BY created_at DESC LIMIT 1
-        ');
+        ");
         $stmt->execute([':token' => $token]);
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        $data = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if (!$data) {
-            $stmt = self::db()->prepare('
-                SELECT * FROM password_resets
-                WHERE token = :token AND expires_at > CURRENT_TIMESTAMP
-                ORDER BY created_at DESC LIMIT 1
-            ');
-            $stmt->execute([':token' => $token]);
-            $data = $stmt->fetch(PDO::FETCH_ASSOC);
-            if (!$data) {
-                return null;
-            }
+            return null;
         }
 
         return self::hydrate($data);
+    }
+
+    public static function deleteExpired(): int
+    {
+        $driver = self::db()->getAttribute(\PDO::ATTR_DRIVER_NAME);
+        $dateExpr = $driver === 'pgsql' ? 'CURRENT_TIMESTAMP' : "datetime('now')";
+
+        $stmt = self::db()->prepare("DELETE FROM password_resets WHERE expires_at < {$dateExpr}");
+        $stmt->execute();
+        return $stmt->rowCount();
     }
 
     public static function deleteByEmail(string $email): bool
     {
         $stmt = self::db()->prepare('DELETE FROM password_resets WHERE email = :email');
         return $stmt->execute([':email' => $email]);
-    }
-
-    public static function deleteExpired(): int
-    {
-        $stmt = self::db()->prepare("DELETE FROM password_resets WHERE expires_at < datetime('now')");
-        $stmt->execute();
-        return $stmt->rowCount();
     }
 
     public function toArray(): array

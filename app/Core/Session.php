@@ -58,10 +58,7 @@ class Session
         if ($lastActivity > 0 && (time() - $lastActivity) > $maxIdle) {
             $_SESSION = [];
             session_destroy();
-            if (!headers_sent()) {
-                header('Location: /login');
-            }
-            exit;
+            throw new \RuntimeException('Session expired');
         }
 
         $_SESSION['_last_activity'] = time();

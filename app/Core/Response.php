@@ -61,6 +61,10 @@ class Response
     public function back(): self
     {
         $referer = $_SERVER['HTTP_REFERER'] ?? '/';
+        $baseUrl = Env::get('APP_URL', 'http://localhost');
+        if (!str_starts_with($referer, $baseUrl)) {
+            $referer = '/';
+        }
         return $this->redirect($referer);
     }
 

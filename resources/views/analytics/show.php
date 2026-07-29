@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function startPolling(linkId) {
-  var lastTime = '<?= !empty($stats['recent_clicks'][0]['clicked_at']) ? addslashes($stats['recent_clicks'][0]['clicked_at']) : '' ?>';
+  var lastTime = <?= json_encode($stats['recent_clicks'][0]['clicked_at'] ?? '') ?>;
   setInterval(function() {
     var url = '/analytics/' + linkId + '/realtime';
     if (lastTime) url += '?since=' + encodeURIComponent(lastTime);

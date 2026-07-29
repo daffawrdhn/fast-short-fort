@@ -162,7 +162,10 @@ class Migration
 
     public function rollback(int $steps = 1): void
     {
-        $stmt = $this->pdo->query('SELECT migration FROM migrations ORDER BY id DESC LIMIT ' . $steps);
+        $steps = max(1, (int) $steps);
+        $stmt = $this->pdo->prepare('SELECT migration FROM migrations ORDER BY id DESC LIMIT :limit');
+        $stmt->bindValue(':limit', $steps, \PDO::PARAM_INT);
+        $stmt->execute();
         $migrations = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
         foreach ($migrations as $migration) {

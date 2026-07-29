@@ -104,6 +104,11 @@ class Webhook
 
     public function trigger(string $eventType, array $payload): bool
     {
+        if (!str_starts_with($this->url, 'https://')) {
+            Logger::warning('Webhook URL must use HTTPS', ['url' => $this->url, 'event' => $eventType]);
+            return false;
+        }
+
         $eventsList = array_map('trim', explode(',', $this->events));
 
         if (!in_array($eventType, $eventsList, true)) {
