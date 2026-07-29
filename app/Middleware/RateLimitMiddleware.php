@@ -93,33 +93,22 @@ class RateLimitMiddleware extends Middleware
         $db = Database::connection();
         $driver = Database::getInstance()->getDriver();
 
-        $stmt = $db->prepare('SELECT id, attempts FROM rate_limits WHERE key_name = :key');
-        $stmt->execute([':key' => $key]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($row) {
-            if ($driver === 'sqlite') {
-                $update = $db->prepare(
-                    'UPDATE rate_limits SET attempts = attempts + 1 WHERE id = :id'
-                );
-            } else {
-                $update = $db->prepare(
-                    'UPDATE rate_limits SET attempts = attempts + 1 WHERE id = :id'
-                );
-            }
-            $update->execute([':id' => $row['id']]);
+        if ($driver === 'sqlite') {
+            // Atomic upsert for SQLite — no SELECT+UPDATE race condition
+            $stmt = $db->prepare(
+                "INSERT INTO rate_limits (key_name, attempts, expires_at)
+                 VALUES (:key, 1, datetime('now', :decay || ' seconds'))
+                 ON CONFLICT(key_name) DO UPDATE SET attempts = attempts + 1"
+            );
         } else {
-            if ($driver === 'sqlite') {
-                $insert = $db->prepare(
-                    'INSERT INTO rate_limits (key_name, attempts, expires_at) VALUES (:key, 1, datetime(\'now\', :decay || \' seconds\'))'
-                );
-            } else {
-                $insert = $db->prepare(
-                    'INSERT INTO rate_limits (key_name, attempts, expires_at) VALUES (:key, 1, NOW() + (:decay || \' second\')::INTERVAL)'
-                );
-            }
-            $insert->execute([':key' => $key, ':decay' => (string)$this->decaySeconds]);
+            // Atomic upsert for PostgreSQL
+            $stmt = $db->prepare(
+                "INSERT INTO rate_limits (key_name, attempts, expires_at)
+                 VALUES (:key, 1, NOW() + (:decay || ' second')::INTERVAL)
+                 ON CONFLICT(key_name) DO UPDATE SET attempts = rate_limits.attempts + 1"
+            );
         }
+        $stmt->execute([':key' => $key, ':decay' => (string)$this->decaySeconds]);
     }
 
     private function getRetryAfter(string $key): int

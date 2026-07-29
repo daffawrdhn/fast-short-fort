@@ -116,10 +116,13 @@ class LinkService
         }
 
         try {
-            $stmt = $this->db->prepare("SELECT COUNT(*) FROM blocklist WHERE :url LIKE '%' || pattern || '%'");
-            $stmt->execute([':url' => $url]);
-            if ((int) $stmt->fetchColumn() > 0) {
-                return false;
+            $stmt = $this->db->prepare("SELECT pattern FROM blocklist WHERE pattern != ''");
+            $stmt->execute();
+            $patterns = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            foreach ($patterns as $pattern) {
+                if ($pattern !== '' && str_contains($url, $pattern)) {
+                    return false;
+                }
             }
         } catch (\Throwable) {
         }

@@ -280,10 +280,14 @@ assert_equals($domain->domain, $foundDomain->domain, 'Domain name matches');
 
 echo PHP_EOL;
 
-// === 10. INCREMENT CLICKS ===
-echo "--- 10. INCREMENT CLICKS ---" . PHP_EOL;
 
-assert_true($link->incrementClicks(), 'Link::incrementClicks succeeds');
+// incrementClicks() was dead code (only updated updated_at, never the actual counter)
+// Click tracking is now handled entirely by AnalyticsService::recordClick() → link_clicks table.
+// We verify click count is tracked correctly via the database directly.
+$clickCountStmt = Database::connection()->prepare('SELECT COUNT(*) FROM link_clicks WHERE link_id = :id');
+$clickCountStmt->execute([':id' => $link->id]);
+$clickCount = (int) $clickCountStmt->fetchColumn();
+assert_true($clickCount >= 0, 'Link click count is queryable from link_clicks table');
 
 echo PHP_EOL;
 

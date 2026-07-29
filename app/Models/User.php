@@ -15,6 +15,7 @@ class User
     public bool $two_fa_enabled = false;
     public ?string $email_verified_at = null;
     public ?string $remember_token = null;
+    public ?string $email_verification_token = null;
     public bool $is_admin = false;
     public ?string $created_at = null;
     public ?string $updated_at = null;
@@ -48,7 +49,8 @@ class User
 
     public static function create(array $data): self
     {
-        $passwordHash = password_hash($data['password'], PASSWORD_BCRYPT);
+        // Use Hash::make() which applies PASSWORD_ARGON2ID — consistent with AuthService
+        $passwordHash = \App\Core\Hash::make($data['password']);
         $stmt = self::db()->prepare('
             INSERT INTO users (name, email, password_hash, created_at, updated_at)
             VALUES (:name, :email, :password_hash, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
@@ -70,7 +72,7 @@ class User
 
         foreach (
             ['name', 'email', 'password_hash', 'two_fa_secret', 'two_fa_enabled',
-                      'email_verified_at', 'remember_token'] as $field
+                      'email_verified_at', 'remember_token', 'email_verification_token', 'is_admin'] as $field
         ) {
             if (array_key_exists($field, $data)) {
                 $fields[] = "{$field} = :{$field}";
@@ -157,6 +159,7 @@ class User
         $user->two_fa_enabled = !empty($data['two_fa_enabled']);
         $user->email_verified_at = $data['email_verified_at'] ?? null;
         $user->remember_token = $data['remember_token'] ?? null;
+        $user->email_verification_token = $data['email_verification_token'] ?? null;
         $user->is_admin = !empty($data['is_admin']);
         $user->created_at = $data['created_at'] ?? null;
         $user->updated_at = $data['updated_at'] ?? null;

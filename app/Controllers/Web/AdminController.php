@@ -44,7 +44,12 @@ class AdminController
                 $flash[$type] = $this->session->flash($type);
             }
         }
-        $user = $_SESSION['user'] ?? [];
+        $user = [
+            'id'       => $_SESSION['user_id'] ?? null,
+            'name'     => $_SESSION['user_name'] ?? 'Admin',
+            'email'    => $_SESSION['user_email'] ?? '',
+            'is_admin' => $_SESSION['user_is_admin'] ?? false,
+        ];
         $response = new Response();
         echo $this->view->renderString('layouts.admin', [
             'title' => $title . ' - Admin - FORT',

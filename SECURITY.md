@@ -9,89 +9,100 @@ We take the security of FORT (Fast Short) seriously. If you discover a security 
 ### How to Report
 
 - **Email**: security@example.com
-- **PGP Key**: If available, please encrypt your report using the maintainer's PGP key (key ID and fingerprint to be added here).
+- **GitHub**: Use [GitHub Private Security Advisories](https://github.com/daffawrdhn/fast-short-fort/security/advisories/new)
 
 ### What to Include
 
-- A description of the vulnerability.
-- Steps to reproduce the issue.
-- Affected versions.
-- Any potential impact or exploit scenario.
+- A description of the vulnerability
+- Steps to reproduce the issue
+- Affected versions
+- Any potential impact or exploit scenario
 
 ### Response Commitment
 
-- We will acknowledge receipt of your report within **48 hours**.
-- We aim to provide an initial assessment within **5 business days**.
-- Critical vulnerabilities will be prioritized and addressed as quickly as possible.
-- We will keep you informed of progress toward a fix and release timeline.
+- Acknowledgement within **48 hours**
+- Initial assessment within **5 business days**
+- Critical vulnerabilities prioritized and addressed ASAP
+- Progress updates throughout remediation
 
-### Security Measures Implemented
+---
 
-This version includes the **complete security audit** from January-March 2025:
+## Security Measures Implemented
+
+### v4.2.0 — 2026-07-29 (Deep Audit Hardening)
+
+**Critical Fixes (7 applied):**
+- [x] **Email verification token isolation** — dedicated `email_verification_token` column; no longer shares `remember_token` with remember-me sessions. Prevents token confusion authentication bypass.
+- [x] **2FA redirect fixed** — `/twofa` was a dead route (404); corrected to `/twofa/challenge`
+- [x] **Email resend redirect fixed** — `/email/verify` was a dead route (404); corrected to `/verify-email`
+- [x] **Password-protected link redirect fixed** — `/links/password/{slug}` was a dead route; corrected to `/p/{slug}`
+- [x] **Admin session data fixed** — `$_SESSION['user']` was never populated; admin panel now reads the correct session keys set by `AuthService`
+- [x] **URL blocklist SQL fixed** — PDO parameter in LIKE left-side is unsupported; replaced with PHP-level `str_contains()` iteration (portable across SQLite & PostgreSQL)
+- [x] **Session expiry graceful handling** — replaced uncaught `RuntimeException` with graceful redirect to `/login?reason=session_expired`
+
+**Security Fixes:**
+- [x] **Argon2id hashing consistency** — `User::create()` was using `PASSWORD_BCRYPT` directly, now correctly uses `Hash::make()` (Argon2id) consistent with `AuthService`
+- [x] **Rate limit race condition fixed** — SELECT+UPDATE race replaced with atomic `INSERT ... ON CONFLICT DO UPDATE` UPSERT for both SQLite and PostgreSQL
+- [x] **View double-output fixed** — `View::render()` was calling `echo` before `Response::send()`, risking headers-already-sent errors; now fully buffered
+- [x] **Dead code removed** — `Link::incrementClicks()` was incorrect (only updated `updated_at`, not click counter) and never called; removed
+
+### v4.1.0 — Post-Audit Security Hardening (Jan–Mar 2025)
 
 **Critical Fixes (15 applied):**
-- [x] **AdminMiddleware was blocking all routes** — split admin and user routes
-- [x] Password reset tokens **hashed** di database; dihapus dari URL pada error
-- [x] All admin POST routes terdaftar (create/edit/delete user, workspace, blocklist)
-- [x] **CSRF protection di semua forms** (termasuk logout)
-- [x] **Rate limiting di password reset endpoints** (browser, API)
-- [x] Password complexity enforced di **semua** backend (Profil, Admin, API)
-- [x] `password_hash` dihapus dari API responses (`Link::toArray()`)
-- [x] **Token remember di-invalidate** saat password berubah
-- [x] Installer defaults secures: `SESSION_HTTPS_ONLY=true`, `SESSION_SECURE_COOKIE=true`, `CORS_ALLOWED_ORIGINS=APP_URL`
-- [x] `Env::get()` consistency — semua perubahan ke lingkungan konsisten
-- [x] Token comparison untuk save token reset
-- [x] **Response::back() validations** di `Response.php`
-- [x] Global exception handler pembocorkan debugging riat
-- [x] Content-Type validation endpoint API (mengurangi serangan `PUT`/`PATCH`)
-- [x] Low-risk mitigations and ongoing improvements based on audit findings
-
-**Additional Protections:**
-- **Browser-side**: CSP, HSTS, X-Frame-Options, XSS protection, Referrer-Policy
-- **Session security**: Browser-keep cookie flag, Secure cookie allow, browser safe
-- **Auth security**: Argon2id hashing, 2FA (TOTP), email verification, token remember rotasi, CORS restricted
-- **Transport security**: https-only mode default di produksi, CSP enforcement, pencegahan file upload terlarang
-- **Injection prevention**: Prepared statements, escaping (`htmlspecialchars`), validasi input
-
-### Known Limitations
-
-- Ini adalah impor `run-tests` akhir yang diterapkan si ISSN/**mengatasi kerentanan kritis dan biasa** yang teridentifikasi di 2025 Namun implementasi ini **terbuka untuk eksperimen akar baru** dan kemungkinan perbaikan arsitektur tambahan:
-  - CSRF pada token API (kalau menggunakan header Authorization Bearer)
-  - Kelemahan di spesifik endpoint yg fokus mendapat serangan high-volume (seperti `/install/`).
-  - Tiruan keamanan token awasi Di pencurian session cookie.
-
-### Contact Us
-
-For security issues, contact:
-- **Email**: security@example.com
-- **PGP Key**: [Akan disediakan]
-
-Be sure to use strong encryption if available and include your bug report and reproduction steps.
+- [x] AdminMiddleware split — user vs admin routes properly separated
+- [x] Password reset tokens hashed in database; never exposed in error URLs
+- [x] All admin POST routes registered (create/edit/delete user, workspace, blocklist)
+- [x] CSRF protection on **all** forms including logout
+- [x] Rate limiting on password reset endpoints (web + API)
+- [x] Password complexity enforced at all entry points (Profile, Admin, API)
+- [x] `password_hash` excluded from API responses (`Link::toArray()`)
+- [x] Remember-me tokens invalidated on password change
+- [x] Installer defaults secured: `SESSION_HTTPS_ONLY=true`, `SESSION_SECURE_COOKIE=true`, `CORS_ALLOWED_ORIGINS=APP_URL`
+- [x] Consistent `Env::get()` usage throughout codebase
+- [x] Token comparison hardened for password reset
+- [x] `Response::back()` validates referer against `APP_URL` (open redirect prevention)
+- [x] Global exception handler does not leak stack traces to users in production
+- [x] Content-Type validation on API endpoints
+- [x] Low-risk mitigations and ongoing improvements
 
 ---
 
-*Laporan perbaikan keamanan akan diprioritaskan berdasarkan tingkat keparahan. Tim keamanan bekerja hari kerja standard kecuali untuk eskalasi darurat.*
+## Security Architecture
+
+### Multi-Layer Defense
+
+| Layer | Mechanism |
+|-------|-----------|
+| **Transport** | HSTS (`max-age=31536000; includeSubDomains` in production) |
+| **Authentication** | Argon2id password hashing, TOTP 2FA, rotating remember-me tokens |
+| **Email Verification** | Dedicated single-use `email_verification_token` — cleared after use |
+| **Session** | `session_regenerate_id()` on login, idle timeout with graceful redirect |
+| **CSRF** | Per-session token validated on all state-changing requests |
+| **Rate Limiting** | Atomic database UPSERT per IP/API key per endpoint |
+| **SQL Injection** | PDO prepared statements throughout |
+| **XSS** | `htmlspecialchars()` on all user-controlled output |
+| **Headers** | X-Frame-Options, X-Content-Type-Options, X-XSS-Protection, Referrer-Policy, Permissions-Policy |
+| **URL Blocklist** | PHP-level `str_contains()` pattern matching (no SQL injection surface) |
+| **API Auth** | JWT (HS256, expiring) + API Key (SHA-256 hashed in DB) |
+| **Admin Protection** | `AdminMiddleware` — dedicated check on `$_SESSION['user_is_admin']` |
+
+### Known Limitations / Tech Debt
+
+- No `Content-Security-Policy` header — recommended for XSS mitigation in depth
+- Webhook delivery is synchronous with blocking `sleep()` retries — consider async queue for production
+- Rate limits use database (adequate for moderate traffic); consider Redis for high-scale
+- Blocklist is substring-match only — does not support wildcard or regex patterns
 
 ---
 
-Keamanan FORT:
-- [x] Token reset hash
-- [x] Response back validation
-- [x] Auth: CSRF + escaped output
-- [x] DB: Prepared statements
-- [x] Session: browser-safe cookie
-- [x] Cookie secure, remember me IP bounds
-- [x] CSP: full restrictions
-- [x] Global exception handler
+## Supported Versions
 
-Multi-layer defense yang komprehensif diterapkan. Tetap waspada!
+| Version | Supported |
+|---------|-----------|
+| 4.2.x   | ✅ Yes (current) |
+| 4.1.x   | ⚠️ Security fixes only |
+| < 4.1   | ❌ No |
 
 ---
 
-**Last Updated**: July 29, 2026 (v4.1.0 — Post-Audit Security Hardening)
-
-### Previous Revisions
-
-- v3.2.0 (Aug 2024)
-- v3.1.0 (Apr 2024)
-- ...
+**Last Updated**: 2026-07-29 (v4.2.0 — Deep Audit Hardening)

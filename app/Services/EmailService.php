@@ -20,7 +20,10 @@ class EmailService
     public function sendVerificationEmail(User $user): bool
     {
         $token = bin2hex(random_bytes(32));
-        $user->update(['remember_token' => $token]);
+        // Use dedicated email_verification_token column — NOT remember_token.
+        // Sharing remember_token would allow verification links to authenticate as
+        // remember-me cookies and vice versa (security vulnerability).
+        $user->update(['email_verification_token' => $token]);
 
         $appUrl = rtrim(Env::get('APP_URL', 'http://localhost'), '/');
         $link = $appUrl . '/verify-email?token=' . urlencode($token);

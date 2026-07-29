@@ -58,7 +58,11 @@ namespace App\Core {
             if ($lastActivity > 0 && (time() - $lastActivity) > $maxIdle) {
                 $_SESSION = [];
                 session_destroy();
-                throw new \RuntimeException('Session expired');
+                // Graceful redirect instead of throwing an unhandled exception
+                if (!headers_sent()) {
+                    header('Location: /login?reason=session_expired');
+                }
+                exit;
             }
 
             $_SESSION['_last_activity'] = time();

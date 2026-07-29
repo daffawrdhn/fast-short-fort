@@ -23,20 +23,20 @@ Built with **Native PHP 8.2+** — no heavy frameworks. Self-host on shared host
 - Deep link / mobile app scheme support
 
 ### Auth & Security
-- Register/Login with Argon2id hashing
-- Email verification (optional SMTP)
-- Two-Factor Authentication (TOTP — Google Authenticator)
-- "Remember Me" with secure token rotation and browser-secure cookie flag (`SESSION_HTTPS_ONLY=true`)
-- Password reset with expiring **hashed** tokens (sha256) and no token exposure in URLs
+- Register/Login with **Argon2id** hashing (consistent across all registration paths)
+- Email verification (optional SMTP) using **dedicated, single-use token** — separate from remember-me tokens
+- Two-Factor Authentication (TOTP — Google Authenticator compatible)
+- "Remember Me" with **secure token rotation** and browser-secure cookie flag (`SESSION_HTTPS_ONLY=true`)
+- Password reset with expiring **hashed** tokens (sha256), single-use, no token exposure in URLs
 - CSRF protection on **all** forms (including logout)
 - XSS, CSRF, SQL injection prevention
-- Rate limiting (global, login, link creation, API, password reset)
-- Malicious URL detection (blocklist + Google Safe Browsing)
-- Security headers (HSTS, CSP, X-Frame-Options, etc.)
+- **Atomic rate limiting** (no race condition — uses database UPSERT) for global, login, link creation, API, password reset
+- Malicious URL detection (blocklist — PHP `str_contains` match, portable across SQLite & PostgreSQL)
+- Security headers (HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy)
 - Separate admin routes with `AdminMiddleware` protection
 - Feature toggles for all third-party services (default to `false`)
-- Logout CSRF validation (previously unprotected)
-- Soft delete for links with restore/forceDelete**
+- **Graceful session expiry** — redirect to `/login` instead of unhandled 500 error
+- Soft delete for links with restore/forceDelete
 
 ### Dashboard
 - Quick URL shortener
@@ -46,17 +46,17 @@ Built with **Native PHP 8.2+** — no heavy frameworks. Self-host on shared host
 
 ### Analytics
 - Total & unique clicks
-- Geolocation (country/city) with automatic fallback IP lookup enabled by default
+- Geolocation (country/city) with automatic fallback IP lookup
 - Device, browser, OS breakdown
-- User preferred language tracking (parsed from browser `Accept-Language` headers) with visual pie charts
-- Raw IP Address logging (saved to `ip_address` column)
+- User preferred language tracking (parsed from `Accept-Language` headers) with pie charts
+- Raw IP Address logging
 - Referrer tracking
 - Time-series charts (hourly/daily/monthly)
-- Real-time click feed (polling) with detailed IP and Language logs
-- CSV/JSON exports (both for individual links and workspace-wide metrics)
+- Real-time click feed (polling)
+- CSV/JSON exports (per-link and workspace-wide)
 
 ### Teams
-- Fully functional multi-workspace switcher dashboard
+- Multi-workspace switcher dashboard
 - Role-based access (Owner, Admin, Editor, Viewer)
 - Invite members via email with role configuration
 - Revoke member access instantly
@@ -203,7 +203,7 @@ Laragon sudah auto-configure rewrite. Pastikan file `public/.htaccess` ada (suda
 ```
 ├── app/                # Controllers, Models, Services, Middleware, Core
 ├── config/             # App & database config
-├── database/           # Migrations
+├── database/           # Migrations (001–019)
 ├── public/             # Web root (only folder exposed)
 │   ├── index.php       # Front controller
 │   ├── api.php         # API entry point
@@ -245,11 +245,42 @@ Full API docs at [`public/assets/openapi.yaml`](public/assets/openapi.yaml).
 ## 🛡 Security
 
 - Webroot terpisah (`public/`), direktori lain terproteksi `.htaccess`/nginx
-- Semua password di-hash Argon2id
+- Semua password di-hash dengan **Argon2id** (konsisten di seluruh codebase)
+- Email verification menggunakan **dedicated single-use token** (kolom `email_verification_token`) — terpisah dari remember-me token
 - Prepared statements (no SQL injection)
 - CSRF tokens di semua form
 - Output escaping (`htmlspecialchars`)
-- Rate limiting, session security, security headers
+- **Atomic rate limiting** via database UPSERT (no race condition)
+- Session security, security headers
+
+See [SECURITY.md](SECURITY.md) for full security policy.
+
+---
+
+## 📋 Changelog
+
+### v4.2.0 — 2026-07-29 (Post Deep-Audit Hardening)
+
+**Security Fixes:**
+- `[CRITICAL]` Fix email verification token using dedicated `email_verification_token` column — prevents token confusion with `remember_me` cookie (CVE-class: authentication bypass)
+- `[CRITICAL]` Fix URL blocklist SQL query — was non-functional due to invalid PDO parameter position in LIKE clause
+- `[MEDIUM]` Fix `User::create()` hashing — was using `PASSWORD_BCRYPT`, now consistently uses `PASSWORD_ARGON2ID` via `Hash::make()`
+- `[MEDIUM]` Fix rate limit race condition — replaced SELECT+UPDATE with atomic `INSERT ... ON CONFLICT DO UPDATE` UPSERT
+
+**Bug Fixes:**
+- `[CRITICAL]` Fix 2FA login redirect — was redirecting to `/twofa` (404), corrected to `/twofa/challenge`
+- `[CRITICAL]` Fix resend email verification redirect — was redirecting to `/email/verify` (404), corrected to `/verify-email`
+- `[CRITICAL]` Fix password-protected link redirect — was redirecting to `/links/password/{slug}` (404), corrected to `/p/{slug}`
+- `[CRITICAL]` Fix admin panel user data — `$_SESSION['user']` was never set by `AuthService`, now reads from correct session keys
+- `[MAJOR]` Fix session expiry — was throwing uncaught `RuntimeException` causing error 500, now gracefully redirects to `/login?reason=session_expired`
+- `[MAJOR]` Fix `View::render()` double output — removed direct `echo`, output now fully buffered via `Response::body()`
+- Remove dead code `Link::incrementClicks()` — method was incorrect (only updated `updated_at`) and never called
+
+**Improvements:**
+- `visitor_uuid` cookie `secure` flag now follows `SESSION_HTTPS_ONLY` env var instead of hardcoded `true`
+
+**Database:**
+- Migration `019`: Add `email_verification_token` column to `users` table
 
 ---
 

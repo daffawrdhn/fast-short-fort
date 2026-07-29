@@ -161,11 +161,6 @@ class Link
         return $stmt->execute([':id' => $this->id]);
     }
 
-    public function incrementClicks(): bool
-    {
-        $stmt = self::db()->prepare('UPDATE links SET updated_at = CURRENT_TIMESTAMP WHERE id = :id');
-        return $stmt->execute([':id' => $this->id]);
-    }
 
     public function getAnalytics(): array
     {

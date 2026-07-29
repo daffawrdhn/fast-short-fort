@@ -113,7 +113,7 @@ class AuthController
 
         if ($twofaEnabled && $user->two_fa_enabled && $user->two_fa_secret !== null) {
             $_SESSION['_2fa_user_id'] = $user->id;
-            $res->redirect('/twofa')->send();
+            $res->redirect('/twofa/challenge')->send();
             return;
         }
 
@@ -305,7 +305,9 @@ class AuthController
         }
 
         $db = Database::connection();
-        $stmt = $db->prepare('SELECT * FROM users WHERE remember_token = :token LIMIT 1');
+        // Use dedicated email_verification_token column, NOT remember_token.
+        // Using remember_token for this was a security vulnerability.
+        $stmt = $db->prepare('SELECT * FROM users WHERE email_verification_token = :token LIMIT 1');
         $stmt->execute([':token' => $token]);
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -329,7 +331,8 @@ class AuthController
         }
 
         $user->verifyEmail();
-        $user->update(['remember_token' => null]);
+        // Clear the verification token after use (single-use token)
+        $user->update(['email_verification_token' => null]);
 
         $this->session->flash('success', 'Email verified successfully! You can now sign in.');
         $res->redirect('/login')->send();
@@ -371,7 +374,7 @@ class AuthController
             $this->session->flash('error', 'Failed to send verification email. Please try again later.');
         }
 
-        $res->redirect('/email/verify')->send();
+        $res->redirect('/verify-email')->send();
     }
 
     // --- Password Reset ---
@@ -517,7 +520,7 @@ class AuthController
     {
         if (!$req->validateCsrf()) {
             $this->session->flash('error', 'Invalid CSRF token.');
-            $res->redirect('/twofa')->send();
+            $res->redirect('/twofa/challenge')->send();
             return;
         }
 
@@ -537,14 +540,14 @@ class AuthController
         $code = trim($req->input('code', ''));
         if ($code === '' || !preg_match('/^\d{6}$/', $code)) {
             $this->session->flash('error', 'Please enter a valid 6-digit code.');
-            $res->redirect('/twofa')->send();
+            $res->redirect('/twofa/challenge')->send();
             return;
         }
 
         $authService = new AuthService();
         if (!$authService->verifyTwoFACode($user->two_fa_secret, $code)) {
             $this->session->flash('error', 'Invalid authentication code.');
-            $res->redirect('/twofa')->send();
+            $res->redirect('/twofa/challenge')->send();
             return;
         }
 

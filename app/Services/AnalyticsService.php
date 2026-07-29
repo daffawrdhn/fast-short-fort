@@ -54,7 +54,7 @@ class AnalyticsService
             setcookie('visitor_uuid', $visitorUuid, [
                 'expires' => time() + 31536000,
                 'path' => '/',
-                'secure' => true,
+                'secure' => Env::get('SESSION_HTTPS_ONLY', 'false') === 'true',
                 'httponly' => true,
                 'samesite' => 'Lax'
             ]);

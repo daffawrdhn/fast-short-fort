@@ -34,9 +34,7 @@ class View
         $response = new Response();
         $response->header('Content-Type', 'text/html; charset=utf-8');
         $response->status(200);
-
-        // Need to use a different approach since we can't modify body after echo
-        echo $content;
+        $response->body($content);
         return $response;
     }
 

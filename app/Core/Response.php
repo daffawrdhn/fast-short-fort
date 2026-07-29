@@ -54,7 +54,10 @@ class Response
 
     public function view(string $template, array $data = []): self
     {
-        return View::getInstance()->render($template, $data);
+        $content = View::getInstance()->renderString($template, $data);
+        $this->header('Content-Type', 'text/html; charset=utf-8');
+        $this->body($content);
+        return $this;
     }
 
     public function redirect(string $url, int $status = 302): self
