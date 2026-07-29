@@ -252,7 +252,8 @@ class LinkController
             Logger::info('Link created', ['slug' => $slug, 'workspace_id' => $workspaceId]);
             $this->session->flash('success', 'Link created successfully.');
         } catch (\Throwable $e) {
-            $this->session->flash('error', 'Failed to create link: ' . $e->getMessage());
+            Logger::error('Failed to create link: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            $this->session->flash('error', 'Failed to create link.');
         }
 
         $response->redirect('/links');
@@ -421,7 +422,8 @@ class LinkController
             $link->update($updateData);
             $this->session->flash('success', 'Link updated successfully.');
         } catch (\Throwable $e) {
-            $this->session->flash('error', 'Failed to update link: ' . $e->getMessage());
+            Logger::error('Failed to update link: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            $this->session->flash('error', 'Failed to update link.');
         }
 
         $response->redirect('/links');
@@ -514,6 +516,7 @@ class LinkController
             $stmt->execute(array_merge($ids, [$workspaceId]));
             $this->session->flash('success', count($ids) . ' links moved to trash.');
         } catch (\Throwable $e) {
+            Logger::error('Failed to bulk delete links: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             $this->session->flash('error', 'Failed to delete links.');
         }
 
@@ -560,6 +563,7 @@ class LinkController
             $label = $active ? 'enabled' : 'disabled';
             $this->session->flash('success', count($ids) . " links {$label}.");
         } catch (\Throwable $e) {
+            Logger::error('Failed to bulk update active status: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             $this->session->flash('error', 'Failed to update links.');
         }
 
@@ -588,6 +592,7 @@ class LinkController
             $stmt->execute([':ws' => $workspaceId]);
             $links = $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (\Throwable $e) {
+            Logger::error('Failed to bulk export links: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             $this->session->flash('error', 'Failed to export links.');
             $response->redirect('/links');
             return;

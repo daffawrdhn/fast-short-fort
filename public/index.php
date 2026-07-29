@@ -25,6 +25,13 @@ if ($debug) {
 }
 
 set_exception_handler(function (Throwable $e) use ($debug) {
+    // Log exception to storage/logs/error.log
+    \App\Core\Logger::error($e->getMessage(), [
+        'file' => $e->getFile(),
+        'line' => $e->getLine(),
+        'trace' => $e->getTraceAsString(),
+    ]);
+
     http_response_code(500);
     if ($debug) {
         echo '<h1>Internal Server Error</h1>';
@@ -62,19 +69,27 @@ $router->post('/login', [\App\Controllers\Web\AuthController::class, 'login']);
 $router->get('/register', [\App\Controllers\Web\AuthController::class, 'showRegisterForm'])->name('register');
 $router->post('/register', [\App\Controllers\Web\AuthController::class, 'register']);
 $router->get('/qrcode', function (Request $req, Response $res) {
-    $url = $req->query('url', '');
-    if (empty($url)) {
-        $res->status(400)->body('URL is required.');
-        return;
+    try {
+        $url = $req->query('url', '');
+        if (empty($url)) {
+            $res->status(400)->body('URL is required.');
+            return;
+        }
+        $renderer = new \BaconQrCode\Renderer\ImageRenderer(
+            new \BaconQrCode\Renderer\RendererStyle\RendererStyle(300),
+            new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
+        );
+        $writer = new \BaconQrCode\Writer($renderer);
+        $svg = $writer->writeString($url);
+        $res->header('Content-Type', 'image/svg+xml');
+        $res->body($svg);
+    } catch (\Throwable $e) {
+        \App\Core\Logger::error('QR Code generation failed: ' . $e->getMessage(), [
+            'url' => $url ?? '',
+            'trace' => $e->getTraceAsString(),
+        ]);
+        $res->status(500)->body('Failed to generate QR code.');
     }
-    $renderer = new \BaconQrCode\Renderer\ImageRenderer(
-        new \BaconQrCode\Renderer\RendererStyle\RendererStyle(300),
-        new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
-    );
-    $writer = new \BaconQrCode\Writer($renderer);
-    $svg = $writer->writeString($url);
-    $res->header('Content-Type', 'image/svg+xml');
-    $res->body($svg);
 });
 $router->get('/links/qr/{id}/{format}', [\App\Controllers\Web\LinkController::class, 'downloadQRCode']);
 $router->post('/logout', [\App\Controllers\Web\AuthController::class, 'logout'])->name('logout');
