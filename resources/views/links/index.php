@@ -82,7 +82,7 @@
                 <td class="td-short-url">
                   <div class="short-url-cell">
                     <a href="/<?= $this->escape($link['slug']) ?>" target="_blank" rel="noopener" class="short-url-label"><?= $this->escape($link['slug']) ?></a>
-                    <button class="btn-copy btn-sm" data-clipboard-text="<?= $this->escape($shortUrl) ?>" aria-label="Copy short URL" title="Copy short URL"></button>
+                    <button type="button" class="btn-copy btn-sm" data-clipboard-text="<?= $this->escape($shortUrl) ?>" aria-label="Copy short URL" title="Copy short URL"></button>
                   </div>
                 </td>
                 <td class="td-url">
@@ -98,7 +98,7 @@
                     <a href="/links/<?= $this->escape((string) $link['id']) ?>/edit" class="btn btn-icon btn-sm" aria-label="Edit link" title="Edit link">&#x270F;&#xFE0F;</a>
                     <a href="/links/<?= $this->escape((string) $link['id']) ?>/toggle" class="btn btn-icon btn-sm" aria-label="Toggle active status" title="<?= $link['is_active'] ? 'Disable' : 'Enable' ?>"><?= $link['is_active'] ? '&#x23F8;&#xFE0F;' : '&#x25B6;&#xFE0F;' ?></a>
                     <a href="/links/<?= $this->escape((string) $link['id']) ?>/delete" class="btn btn-icon btn-sm btn-danger-icon" aria-label="Delete link" title="Delete link" onclick="return confirm('Move this link to trash?')">&#x1F5D1;&#xFE0F;</a>
-                    <button class="btn btn-icon btn-sm" aria-label="Show QR code" title="Show QR code" onclick="showQR('<?= $this->escape($shortUrl) ?>', '<?= $this->escape((string) $link['id']) ?>')">&#x1F4F1;</button>
+                    <button type="button" class="btn btn-icon btn-sm" aria-label="Show QR code" title="Show QR code" onclick="showQR('<?= $this->escape($shortUrl) ?>', '<?= $this->escape((string) $link['id']) ?>')">&#x1F4F1;</button>
                   </div>
                 </td>
               </tr>
