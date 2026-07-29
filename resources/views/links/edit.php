@@ -14,7 +14,7 @@
         <code class="preview-box readonly-url"><?= $this->escape($shortUrl ?? '') ?></code>
       </div>
 
-      <form action="/links/<?= $this->escape((string) $link->id) ?>/update" method="POST" class="link-form" role="form" aria-label="Edit link form" novalidate>
+      <form action="/links/<?= $this->escape((string) $link->id) ?>/edit" method="POST" class="link-form" role="form" aria-label="Edit link form" novalidate>
         <input type="hidden" name="_csrf" value="<?= $this->escape($csrf ?? session()->csrfToken()) ?>">
 
         <div class="form-group">

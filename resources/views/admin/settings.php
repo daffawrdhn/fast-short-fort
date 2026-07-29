@@ -3,7 +3,7 @@
   <p class="text-muted">Configure application-wide settings</p>
 </div>
 
-<form method="post" action="/admin/settings/update" class="settings-form">
+<form method="post" action="/admin/settings" class="settings-form">
   <input type="hidden" name="_csrf" value="<?= htmlspecialchars($csrf ?? '', ENT_QUOTES, 'UTF-8') ?>">
 
   <div class="card">
