@@ -104,7 +104,7 @@ class AdminController
     {
         $search = trim($req->query('search', ''));
         $page = max(1, (int) $req->query('page', 1));
-        $perPage = 20;
+        $perPage = 8;
         $offset = ($page - 1) * $perPage;
 
         try {
@@ -300,7 +300,7 @@ class AdminController
     {
         $search = trim($req->query('search', ''));
         $page = max(1, (int) $req->query('page', 1));
-        $perPage = 20;
+        $perPage = 8;
         $offset = ($page - 1) * $perPage;
 
         try {
