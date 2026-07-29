@@ -44,17 +44,18 @@ $response = new Response();
 
 $router = new Router();
 
-$router->get('/', function (Request $req, Response $res) {
-    $res->view('home');
-});
-
-$router->get('/install', [\App\Controllers\Web\InstallController::class, 'index'])->name('install');
-$router->get('/install/requirements', [\App\Controllers\Web\InstallController::class, 'requirements']);
-$router->get('/install/database', [\App\Controllers\Web\InstallController::class, 'database']);
-$router->post('/install/database', [\App\Controllers\Web\InstallController::class, 'saveDatabase']);
-$router->get('/install/configuration', [\App\Controllers\Web\InstallController::class, 'configuration']);
-$router->post('/install/install', [\App\Controllers\Web\InstallController::class, 'install']);
-$router->get('/install/complete', [\App\Controllers\Web\InstallController::class, 'complete']);
+$router->group('', function (Router $router) {
+    $router->get('/', function (Request $req, Response $res) {
+        $res->view('home');
+    });
+    $router->get('/install', [\App\Controllers\Web\InstallController::class, 'index'])->name('install');
+    $router->get('/install/requirements', [\App\Controllers\Web\InstallController::class, 'requirements']);
+    $router->get('/install/database', [\App\Controllers\Web\InstallController::class, 'database']);
+    $router->post('/install/database', [\App\Controllers\Web\InstallController::class, 'saveDatabase']);
+    $router->get('/install/configuration', [\App\Controllers\Web\InstallController::class, 'configuration']);
+    $router->post('/install/install', [\App\Controllers\Web\InstallController::class, 'install']);
+    $router->get('/install/complete', [\App\Controllers\Web\InstallController::class, 'complete']);
+}, [\App\Middleware\SecurityHeadersMiddleware::class]);
 
 $router->get('/login', [\App\Controllers\Web\AuthController::class, 'showLoginForm'])->name('login');
 $router->post('/login', [\App\Controllers\Web\AuthController::class, 'login']);

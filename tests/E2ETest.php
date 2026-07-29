@@ -305,6 +305,103 @@ assert_true(str_contains($errorJson, '"message":"Bad request"'), 'API error form
 echo PHP_EOL;
 
 // === SUMMARY ===
+// === 12. LINK SOFT DELETE / RESTORE ===
+echo "--- 12. LINK SOFT DELETE / RESTORE ---" . PHP_EOL;
+
+$deleteSlug = $linkService->generateSlug();
+$deleteLink = Link::create([
+    'workspace_id' => $ws->id,
+    'user_id' => $user->id,
+    'original_url' => 'https://example.com/delete-test',
+    'slug' => $deleteSlug,
+    'is_active' => 1,
+]);
+assert_true($deleteLink instanceof Link && $deleteLink->id > 0, 'Soft delete: link created');
+
+assert_true($deleteLink->is_active, 'Soft delete: link is active before delete');
+assert_true($deleteLink->delete(), 'Soft delete: delete() returns true');
+
+$reloadedDelete = Link::findById($deleteLink->id);
+assert_true($reloadedDelete !== null, 'Soft delete: findById still returns link');
+assert_true(!$reloadedDelete->is_active, 'Soft delete: is_active is false after delete');
+
+assert_true($reloadedDelete->restore(), 'Soft delete: restore() returns true');
+$restored = Link::findById($deleteLink->id);
+assert_true($restored->is_active, 'Soft delete: is_active is true after restore');
+
+// re-delete then force-delete
+$deleteLink->delete();
+$forceDeleted = Link::findById($deleteLink->id);
+$forceDeleted->forceDelete();
+$gone = Link::findById($deleteLink->id);
+assert_true($gone === null, 'Force delete: link is completely removed');
+
+echo PHP_EOL;
+
+// === 13. FEATURE TOGGLES ===
+echo "--- 13. FEATURE TOGGLES ---" . PHP_EOL;
+
+$features = require __DIR__ . '/../config/features.php';
+assert_true(is_array($features), 'Features config is an array');
+assert_true(array_key_exists('email_verification', $features), 'Features config has email_verification');
+assert_true(array_key_exists('twofa', $features), 'Features config has twofa');
+assert_true(array_key_exists('geolocation', $features), 'Features config has geolocation');
+assert_true(array_key_exists('safe_browsing', $features), 'Features config has safe_browsing');
+assert_true(array_key_exists('webhooks', $features), 'Features config has webhooks');
+assert_true(array_key_exists('link_cloaking', $features), 'Features config has link_cloaking');
+
+assert_true($features['email_verification'] === false, 'FEATURE_EMAIL_VERIFICATION defaults to false');
+assert_true($features['twofa'] === false, 'FEATURE_TWOFA defaults to false');
+assert_true($features['geolocation'] === false, 'FEATURE_GEOLOCATION defaults to false');
+assert_true($features['safe_browsing'] === false, 'FEATURE_SAFE_BROWSING defaults to false');
+assert_true($features['webhooks'] === false, 'FEATURE_WEBHOOKS defaults to false');
+assert_true($features['link_cloaking'] === false, 'FEATURE_LINK_CLOAKING defaults to false');
+
+echo PHP_EOL;
+
+// === 14. MIDDLEWARE ===
+echo "--- 14. MIDDLEWARE ---" . PHP_EOL;
+
+$rateLimiter = new \App\Middleware\RateLimitMiddleware();
+assert_true($rateLimiter instanceof \App\Core\Middleware, 'RateLimitMiddleware extends Middleware');
+
+$securityHeaders = new \App\Middleware\SecurityHeadersMiddleware();
+assert_true($securityHeaders instanceof \App\Core\Middleware, 'SecurityHeadersMiddleware extends Middleware');
+
+assert_true(class_exists(\App\Middleware\AuthMiddleware::class), 'AuthMiddleware class exists');
+assert_true(class_exists(\App\Middleware\ApiAuthMiddleware::class), 'ApiAuthMiddleware class exists');
+
+echo PHP_EOL;
+
+// === 15. API ROUTES ===
+echo "--- 15. API ROUTES ---" . PHP_EOL;
+
+assert_true(class_exists(\App\Controllers\Api\AuthController::class), 'Api AuthController exists');
+assert_true(class_exists(\App\Controllers\Api\LinkController::class), 'Api LinkController exists');
+assert_true(class_exists(\App\Controllers\Api\WorkspaceController::class), 'Api WorkspaceController exists');
+assert_true(class_exists(\App\Controllers\Api\AnalyticsController::class), 'Api AnalyticsController exists');
+assert_true(class_exists(\App\Controllers\Api\DomainController::class), 'Api DomainController exists');
+assert_true(class_exists(\App\Controllers\Api\WebhookController::class), 'Api WebhookController exists');
+
+$controllerMethods = get_class_methods(\App\Controllers\Api\LinkController::class);
+assert_true(in_array('analytics', $controllerMethods), 'LinkController has analytics method');
+assert_true(in_array('bulkStore', $controllerMethods), 'LinkController has bulkStore method');
+assert_true(in_array('qrcode', $controllerMethods), 'LinkController has qrcode method');
+
+echo PHP_EOL;
+
+// === 16. SESSION REGENERATION ===
+echo "--- 16. SESSION REGENERATION ---" . PHP_EOL;
+
+$authService->createSession($user);
+assert_true(isset($_SESSION['user_id']), 'Session has user_id after createSession');
+assert_equals($user->id, $_SESSION['user_id'], 'Session user_id matches user id');
+assert_equals($user->name, $_SESSION['user_name'], 'Session user_name matches');
+assert_equals($user->email, $_SESSION['user_email'], 'Session user_email matches');
+
+echo PHP_EOL;
+
+// === SUMMARY ===
 echo "==============================================" . PHP_EOL;
 echo "  RESULTS: {$pass} passed, {$fail} failed" . PHP_EOL;
 echo "==============================================" . PHP_EOL . PHP_EOL;

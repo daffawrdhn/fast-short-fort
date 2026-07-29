@@ -144,7 +144,20 @@ class Link
 
     public function delete(): bool
     {
+        $stmt = self::db()->prepare('UPDATE links SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = :id');
+        return $stmt->execute([':id' => $this->id]);
+    }
+
+    public function forceDelete(): bool
+    {
+        self::db()->prepare('DELETE FROM link_clicks WHERE link_id = :id')->execute([':id' => $this->id]);
         $stmt = self::db()->prepare('DELETE FROM links WHERE id = :id');
+        return $stmt->execute([':id' => $this->id]);
+    }
+
+    public function restore(): bool
+    {
+        $stmt = self::db()->prepare('UPDATE links SET is_active = 1, updated_at = CURRENT_TIMESTAMP WHERE id = :id');
         return $stmt->execute([':id' => $this->id]);
     }
 

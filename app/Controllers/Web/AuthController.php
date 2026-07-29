@@ -80,7 +80,9 @@ class AuthController
             return;
         }
 
-        if ($user->two_fa_enabled && $user->two_fa_secret !== null) {
+        $twofaEnabled = ($_ENV['FEATURE_TWOFA'] ?? 'false') === 'true';
+
+        if ($twofaEnabled && $user->two_fa_enabled && $user->two_fa_secret !== null) {
             $_SESSION['_2fa_user_id'] = $user->id;
             $res->redirect('/twofa')->send();
             return;
@@ -191,7 +193,8 @@ class AuthController
             $user = User::findById($userId);
 
             $mailDriver = Env::get('MAIL_DRIVER', '');
-            if ($mailDriver === 'smtp' && $user !== null) {
+            $emailVerificationEnabled = ($_ENV['FEATURE_EMAIL_VERIFICATION'] ?? 'false') === 'true';
+            if ($mailDriver === 'smtp' && $emailVerificationEnabled && $user !== null) {
                 try {
                     $emailService = new EmailService();
                     $emailService->sendVerificationEmail($user);

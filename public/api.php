@@ -58,10 +58,17 @@ $response = new Response();
 
 $router = new Router();
 
-$router->post('/api/auth/login', [\App\Controllers\Api\AuthController::class, 'login']);
-$router->post('/api/auth/register', [\App\Controllers\Api\AuthController::class, 'register']);
-$router->post('/api/auth/logout', [\App\Controllers\Api\AuthController::class, 'logout']);
-$router->post('/api/auth/refresh', [\App\Controllers\Api\AuthController::class, 'refresh']);
+$router->get('/api/health', function (Request $req, Response $res) {
+    $res->json(['status' => 'ok', 'timestamp' => date('c')]);
+}, [\App\Middleware\RateLimitMiddleware::class]);
+
+$router->group('/api/auth', function (Router $router) {
+    $router->post('/login', [\App\Controllers\Api\AuthController::class, 'login']);
+    $router->post('/register', [\App\Controllers\Api\AuthController::class, 'register']);
+    $router->post('/refresh', [\App\Controllers\Api\AuthController::class, 'refresh']);
+    $router->get('/me', [\App\Controllers\Api\AuthController::class, 'me']);
+    $router->post('/logout', [\App\Controllers\Api\AuthController::class, 'logout']);
+}, [\App\Middleware\RateLimitMiddleware::class]);
 
 $router->group('/api/links', function (Router $router) {
     $router->get('/', [\App\Controllers\Api\LinkController::class, 'index']);
@@ -69,12 +76,43 @@ $router->group('/api/links', function (Router $router) {
     $router->get('/{id}', [\App\Controllers\Api\LinkController::class, 'show']);
     $router->put('/{id}', [\App\Controllers\Api\LinkController::class, 'update']);
     $router->delete('/{id}', [\App\Controllers\Api\LinkController::class, 'destroy']);
-}, [\App\Middleware\ApiAuthMiddleware::class]);
+    $router->get('/{id}/analytics', [\App\Controllers\Api\LinkController::class, 'analytics']);
+    $router->post('/bulk', [\App\Controllers\Api\LinkController::class, 'bulkStore']);
+    $router->get('/{id}/qrcode', [\App\Controllers\Api\LinkController::class, 'qrcode']);
+}, [\App\Middleware\ApiAuthMiddleware::class, \App\Middleware\RateLimitMiddleware::class]);
 
-$router->get('/api/analytics/{id}', [\App\Controllers\Api\AnalyticsController::class, 'show']);
-$router->get('/api/health', function (Request $req, Response $res) {
-    $res->json(['status' => 'ok', 'timestamp' => date('c')]);
-});
+$router->group('/api/workspaces', function (Router $router) {
+    $router->get('/', [\App\Controllers\Api\WorkspaceController::class, 'index']);
+    $router->post('/', [\App\Controllers\Api\WorkspaceController::class, 'store']);
+    $router->get('/{id}', [\App\Controllers\Api\WorkspaceController::class, 'show']);
+    $router->put('/{id}', [\App\Controllers\Api\WorkspaceController::class, 'update']);
+    $router->delete('/{id}', [\App\Controllers\Api\WorkspaceController::class, 'destroy']);
+    $router->get('/{id}/members', [\App\Controllers\Api\WorkspaceController::class, 'members']);
+    $router->post('/{id}/members', [\App\Controllers\Api\WorkspaceController::class, 'addMember']);
+    $router->delete('/{id}/members/{userId}', [\App\Controllers\Api\WorkspaceController::class, 'removeMember']);
+    $router->put('/{id}/members/{userId}', [\App\Controllers\Api\WorkspaceController::class, 'updateMemberRole']);
+}, [\App\Middleware\ApiAuthMiddleware::class, \App\Middleware\RateLimitMiddleware::class]);
+
+$router->group('/api/analytics', function (Router $router) {
+    $router->get('/links/{linkId}', [\App\Controllers\Api\AnalyticsController::class, 'linkAnalytics']);
+    $router->get('/workspaces/{workspaceId}', [\App\Controllers\Api\AnalyticsController::class, 'workspaceAnalytics']);
+    $router->get('/links/{linkId}/export/{format}', [\App\Controllers\Api\AnalyticsController::class, 'export']);
+}, [\App\Middleware\ApiAuthMiddleware::class, \App\Middleware\RateLimitMiddleware::class]);
+
+$router->group('/api/domains', function (Router $router) {
+    $router->get('/', [\App\Controllers\Api\DomainController::class, 'index']);
+    $router->post('/', [\App\Controllers\Api\DomainController::class, 'store']);
+    $router->post('/{id}/verify', [\App\Controllers\Api\DomainController::class, 'verify']);
+    $router->delete('/{id}', [\App\Controllers\Api\DomainController::class, 'destroy']);
+}, [\App\Middleware\ApiAuthMiddleware::class, \App\Middleware\RateLimitMiddleware::class]);
+
+$router->group('/api/webhooks', function (Router $router) {
+    $router->get('/', [\App\Controllers\Api\WebhookController::class, 'index']);
+    $router->post('/', [\App\Controllers\Api\WebhookController::class, 'store']);
+    $router->put('/{id}', [\App\Controllers\Api\WebhookController::class, 'update']);
+    $router->delete('/{id}', [\App\Controllers\Api\WebhookController::class, 'destroy']);
+    $router->post('/{id}/test', [\App\Controllers\Api\WebhookController::class, 'test']);
+}, [\App\Middleware\ApiAuthMiddleware::class, \App\Middleware\RateLimitMiddleware::class]);
 
 $router->dispatch($request, $response);
 $response->send();

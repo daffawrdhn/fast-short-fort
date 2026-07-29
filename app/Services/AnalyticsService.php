@@ -30,7 +30,9 @@ class AnalyticsService
         $userAgent = $request->userAgent();
         $parsed = $this->parseUserAgent($userAgent);
         $referrer = $request->header('Referer', '');
-        $geo = $this->lookupIP($ip);
+
+        $geoEnabled = ($_ENV['FEATURE_GEOLOCATION'] ?? 'false') === 'true';
+        $geo = $geoEnabled ? $this->lookupIP($ip) : ['country' => null, 'city' => null, 'lat' => null, 'lon' => null];
 
         $stmt = $this->db->prepare('
             INSERT INTO link_clicks
