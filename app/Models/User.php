@@ -69,7 +69,7 @@ class User
         $params = [':id' => $this->id];
 
         foreach (['name', 'email', 'password_hash', 'two_fa_secret', 'two_fa_enabled',
-                      'email_verified_at', 'remember_token', 'is_admin'] as $field) {
+                      'email_verified_at', 'remember_token'] as $field) {
             if (array_key_exists($field, $data)) {
                 $fields[] = "{$field} = :{$field}";
                 $params[":{$field}"] = $data[$field];

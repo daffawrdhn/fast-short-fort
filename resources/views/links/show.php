@@ -30,7 +30,7 @@
             <dd class="detail-value">
               <code class="short-url-text"><?= $this->escape($shortUrl ?? '') ?></code>
               <button class="btn-copy btn-sm" data-clipboard-text="<?= $this->escape($shortUrl ?? '') ?>" aria-label="Copy short URL" title="Copy short URL"></button>
-              <a href="/go/<?= $this->escape($link->slug) ?>" target="_blank" rel="noopener" class="btn btn-icon btn-sm" aria-label="Open short URL">&#x2197;&#xFE0F;</a>
+              <a href="/<?= $this->escape($link->slug) ?>" target="_blank" rel="noopener" class="btn btn-icon btn-sm" aria-label="Open short URL">&#x2197;&#xFE0F;</a>
             </dd>
           </div>
           <div class="detail-row">

@@ -824,7 +824,7 @@ class LinkController
 
         if ($link->password_hash !== null && password_verify($password, $link->password_hash)) {
             $this->session->set('link_password_' . $link->id, true);
-            $response->redirect('/go/' . $link->slug);
+            $response->redirect('/' . $link->slug);
             return;
         }
 

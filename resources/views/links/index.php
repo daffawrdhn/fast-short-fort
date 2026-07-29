@@ -81,7 +81,7 @@
                 <td class="td-checkbox"><input type="checkbox" name="ids[]" value="<?= $this->escape((string) $link['id']) ?>" class="select-item" aria-label="Select link <?= $this->escape($link['slug']) ?>"></td>
                 <td class="td-short-url">
                   <div class="short-url-cell">
-                    <a href="/go/<?= $this->escape($link['slug']) ?>" target="_blank" rel="noopener" class="short-url-label"><?= $this->escape($link['slug']) ?></a>
+                    <a href="/<?= $this->escape($link['slug']) ?>" target="_blank" rel="noopener" class="short-url-label"><?= $this->escape($link['slug']) ?></a>
                     <button class="btn-copy btn-sm" data-clipboard-text="<?= $this->escape($shortUrl) ?>" aria-label="Copy short URL" title="Copy short URL"></button>
                   </div>
                 </td>

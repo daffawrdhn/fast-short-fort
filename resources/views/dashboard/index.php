@@ -71,7 +71,7 @@
             ?>
             <tr>
               <td>
-                <a href="/go/<?= $this->escape($link['slug']) ?>" target="_blank" rel="noopener" class="short-url"><?= $this->escape($link['slug']) ?></a>
+                <a href="/<?= $this->escape($link['slug']) ?>" target="_blank" rel="noopener" class="short-url"><?= $this->escape($link['slug']) ?></a>
                 <button class="btn-copy" data-clipboard-text="<?= $this->escape($baseUrl ?? '') . '/' . $this->escape($link['slug']) ?>" aria-label="Copy short URL" title="Copy short URL"></button>
               </td>
               <td class="url-cell">
