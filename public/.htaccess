@@ -1,0 +1,18 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    Options -Indexes
+    Options -MultiViews
+
+    # Block access to dot-files
+    RedirectMatch 403 /\..*$
+
+    # Redirect trailing slashes
+    RewriteRule ^(.+)/$ /$1 [L,R=301]
+
+    # Send requests to front controller
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} !^/api/
+    RewriteRule ^(.*)$ index.php [QSA,L]
+</IfModule>

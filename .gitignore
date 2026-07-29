@@ -1,0 +1,16 @@
+/vendor/
+/node_modules/
+.env
+.env.local
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+/storage/logs/*.log
+/storage/cache/*
+/storage/fort.sqlite*
+.DS_Store
+Thumbs.db
+*.log
+build/
+dist/
+.phpunit.result.cache
