@@ -39,6 +39,11 @@ class AuthService
         $_SESSION['user_email'] = $user->email;
         $_SESSION['user_is_admin'] = $user->is_admin;
 
+        $workspaces = $user->workspaces();
+        if (!empty($workspaces)) {
+            $_SESSION['workspace_id'] = (int) $workspaces[0]['id'];
+        }
+
         Logger::info('User logged in', ['user_id' => $user->id, 'email' => $user->email]);
     }
 
