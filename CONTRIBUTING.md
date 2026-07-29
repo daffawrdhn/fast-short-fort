@@ -28,9 +28,55 @@ All contributions must include tests where applicable. We use **PHPUnit** for te
 - Place unit tests in `tests/Unit/`
 - Ensure all existing tests pass before submitting a PR.
 
+## Security Testing
+
+When implementing new features or fixing vulnerabilities:
+
+1. **Review security requirements** at least once per change: Check for:
+   - SQL injection (use prepared statements)
+   - XSS (escape all user output with `htmlspecialchars()`)
+   - CSRF (add `validateCsrf()` to all POST/PUT/DELETE endpoints)
+   - Session security (use HttpOnly, Secure, SameSite cookie flags)
+   - Authentication flow (verify all protected routes enforce auth)
+   - Input validation (validate all user input against strict rules)
+   - Rate limiting (apply middleware where needed)
+   - Password policy (min length, complexity, and hash policy consistent across all endpoints)
+   - Feature toggle for third-party services (never default to enabled)
+
+2. **Security-specific tests** for changes:
+   - Validate CSRF protection on new forms or API endpoints
+   - Test input validation and sanitization
+   - Ensure password reset uses hashed tokens and secure handling
+   - Verify all environment variables (API keys, secrets) loaded via `Env::get()`
+   - Confirm that all exceptions throw a generic error message in production
+
+3. **Automated security checks**:
+   ```bash
+   # Basic lint (code style)
+   vendor/bin/phpcs --standard=PSR12 app/
+   
+   # Unit tests
+   vendor/bin/phpunit --coverage-text
+   
+   # Manual security review checklist (see SECURITY.md for checklist)
+   ```
+
+4. **Development Security Checklist** (manual verification during development):
+   
+   [x] Apakah menemukan kerentanan terlarang dalam audit (misalnya token plaintext, password complexity tidak konsisten, route tak terlindungi)?
+   [x] Apakah mengubah jalur autentikasi (misalnya admin routes, reset password)?
+   [x] Apakah mengubah validasi input (misalnya feature toggle, validation rules)?
+   [x] Apakah menambahkan fitur baru yang berhubungan dengan token, cookie, or session?
+   [x] Apakah mengubah skema database (misalnya menambah kolom, new tables)?
+   [x] Apakah mengubah middleware handler (misalnya AuthMiddleware, InstallerMiddleware)?
+   [x] Apakah menerapkan API baru yang memerlukan autentikasi?
+   [x] Apakah mengubah penanganan error atau framework exception?
+   [x] Apakah mengedit file .env secara manual atau membuat .env baru?
+   [x] Apakah menghubungkan ke third-party services (Google Safe Browsing, EmailService, Webhook)
+
 ## Reporting Issues
 
-- Use the [GitHub issue tracker](https://github.com/your-org/fort/issues) to report bugs.
+- Use the [GitHub issue tracker](https://github.com/daffawrdhn/fast-short-fort/issues) to report bugs.
 - Include a clear description of the issue, steps to reproduce, and expected behavior.
 - Add environment details (PHP version, database, OS) when relevant.
 
@@ -44,7 +90,7 @@ All contributions must include tests where applicable. We use **PHPUnit** for te
 
 1. Clone the repository:
    ```
-   git clone https://github.com/your-org/fort.git
+   git clone https://github.com/daffawrdhn/fast-short-fort.git
    cd fort
    ```
 2. Install dependencies:
@@ -71,5 +117,6 @@ All contributions must include tests where applicable. We use **PHPUnit** for te
 - [ ] Documentation is updated if needed.
 - [ ] PR targets the `main` branch.
 - [ ] Commits are squashed and logically grouped.
+- [ ] Security review checklist completed (feature toggles, validation, authentication, session/cookie security, third-party integration, CSRF, rate-limiting, password policy, and debug info).
 
 Thank you for helping improve FORT!

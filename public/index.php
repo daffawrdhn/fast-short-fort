@@ -46,7 +46,7 @@ $router = new Router();
 
 $router->group('', function (Router $router) {
     $router->get('/', function (Request $req, Response $res) {
-        $res->view('home');
+        $res->redirect('/dashboard');
     });
     $router->get('/install', [\App\Controllers\Web\InstallController::class, 'index'])->name('install');
     $router->get('/install/requirements', [\App\Controllers\Web\InstallController::class, 'requirements']);

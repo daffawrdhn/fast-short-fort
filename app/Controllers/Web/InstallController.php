@@ -26,7 +26,7 @@ class InstallController
     {
         $this->view = View::getInstance();
         $this->session = Session::getInstance();
-        $this->basePath = dirname(__DIR__, 2);
+        $this->basePath = dirname(__DIR__, 3);
         $this->installLock = $this->basePath . '/storage/.install-lock';
     }
 

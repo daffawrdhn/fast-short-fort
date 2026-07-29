@@ -61,6 +61,19 @@ class Router
         return $this;
     }
 
+    public function middleware(string|array $middleware): self
+    {
+        if (!empty($this->routes)) {
+            $route = &$this->routes[array_key_last($this->routes)];
+            if (is_array($middleware)) {
+                $route['middleware'] = array_merge($route['middleware'], $middleware);
+            } else {
+                $route['middleware'][] = $middleware;
+            }
+        }
+        return $this;
+    }
+
     private function addRoute(string $method, string $path, callable|array $handler): self
     {
         $prefix = '';

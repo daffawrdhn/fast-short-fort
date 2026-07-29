@@ -25,12 +25,17 @@ Built with **Native PHP 8.2+** — no heavy frameworks. Self-host on shared host
 - Register/Login with Argon2id hashing
 - Email verification (optional SMTP)
 - Two-Factor Authentication (TOTP — Google Authenticator)
-- "Remember Me" with secure token rotation
-- Password reset with expiring tokens
-- CSRF, XSS, SQL injection prevention
-- Rate limiting (global, login, link creation, API)
+- "Remember Me" with secure token rotation and browser-secure cookie flag (`SESSION_HTTPS_ONLY=true`)
+- Password reset with expiring **hashed** tokens (sha256) and no token exposure in URLs
+- CSRF protection on **all** forms (including logout)
+- XSS, CSRF, SQL injection prevention
+- Rate limiting (global, login, link creation, API, password reset)
 - Malicious URL detection (blocklist + Google Safe Browsing)
 - Security headers (HSTS, CSP, X-Frame-Options, etc.)
+- Separate admin routes with `AdminMiddleware` protection
+- Feature toggles for all third-party services (default to `false`)
+- Logout CSRF validation (previously unprotected)
+- Soft delete for links with restore/forceDelete**
 
 ### Dashboard
 - Quick URL shortener
