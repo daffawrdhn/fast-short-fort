@@ -110,7 +110,12 @@ Untuk mempermudah instalasi, kami telah menyediakan script instalasi interaktif.
 git clone https://github.com/daffawrdhn/fast-short-fort.git
 cd fast-short-fort
 chmod +x install.sh
+
+# Instalasi biasa
 ./install.sh
+
+# Atau instalasi ulang (clean install) jika terjadi error sebelumnya
+./install.sh --clean
 ```
 
 Script otomatis tersebut akan meminta beberapa input (seperti nama web, URL web, dan jenis database), kemudian script akan otomatis menjalankan composer, mengatur permission, dan melakukan generate database (migrasi).

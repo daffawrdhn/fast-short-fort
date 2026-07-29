@@ -7,6 +7,26 @@ echo "        FORT (Fast Short) - Interactive Installer    "
 echo "====================================================="
 echo ""
 
+# Clean install flag check
+if [[ "$1" == "--clean" ]]; then
+    echo "⚠️  CLEAN INSTALL REQUESTED ⚠️"
+    echo "This will delete the existing .env, SQLite database, logs, cache, and vendor directory."
+    read -p "Are you sure you want to proceed? [y/N]: " CLEAN_CONFIRM
+    if [[ "$CLEAN_CONFIRM" =~ ^[Yy]$ ]]; then
+        echo "Cleaning up previous installation..."
+        rm -f .env
+        rm -f storage/fort.sqlite
+        rm -rf storage/logs/*
+        rm -rf storage/cache/*
+        rm -rf vendor/
+        echo "✅ Cleanup complete."
+        echo ""
+    else
+        echo "Clean install aborted."
+        exit 1
+    fi
+fi
+
 # 1. Check requirements
 if ! command -v php >/dev/null 2>&1; then
     echo "❌ Error: PHP is not installed. Please install PHP 8.2+ first."
