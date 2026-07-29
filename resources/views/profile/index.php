@@ -19,12 +19,12 @@
 
     <div class="form-group">
       <label for="name">Name</label>
-      <input type="text" class="form-control" id="name" name="name" value="<?= htmlspecialchars($user->name ?? '') ?>" required>
+      <input type="text" class="form-control" id="name" name="name" value="<?= htmlspecialchars($profileUser->name ?? '') ?>" required>
     </div>
 
     <div class="form-group">
       <label for="email">Email</label>
-      <input type="email" class="form-control" id="email" name="email" value="<?= htmlspecialchars($user->email ?? '') ?>" required>
+      <input type="email" class="form-control" id="email" name="email" value="<?= htmlspecialchars($profileUser->email ?? '') ?>" required>
     </div>
 
     <hr>
