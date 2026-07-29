@@ -81,6 +81,14 @@ class AuthController
             return;
         }
 
+        $password = $data['password'];
+        if (strlen($password) < 8 || !preg_match('/[A-Z]/', $password) || !preg_match('/[a-z]/', $password) || !preg_match('/[0-9]/', $password)) {
+            $this->api->validationErrorResponse([
+                'password' => ['Password must be at least 8 characters with uppercase, lowercase, and a number.'],
+            ])->send();
+            return;
+        }
+
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],

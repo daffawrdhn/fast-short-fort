@@ -13,14 +13,14 @@ class Database
 
     private function __construct()
     {
-        $dbDriver = $_ENV['DB_DRIVER'] ?? 'sqlite';
+        $dbDriver = Env::get('DB_DRIVER', 'sqlite');
 
         if ($dbDriver === 'pgsql') {
-            $host = $_ENV['DB_HOST'] ?? '127.0.0.1';
-            $port = $_ENV['DB_PORT'] ?? '5432';
-            $name = $_ENV['DB_NAME'] ?? 'fort';
-            $user = $_ENV['DB_USER'] ?? 'fort';
-            $pass = $_ENV['DB_PASSWORD'] ?? 'secret';
+            $host = Env::get('DB_HOST', '127.0.0.1');
+            $port = Env::get('DB_PORT', '5432');
+            $name = Env::get('DB_NAME', 'fort');
+            $user = Env::get('DB_USER', 'fort');
+            $pass = Env::get('DB_PASSWORD', 'secret');
 
             $dsn = "pgsql:host={$host};port={$port};dbname={$name}";
             $this->pdo = new PDO($dsn, $user, $pass, [
@@ -30,7 +30,7 @@ class Database
             ]);
             $this->driver = 'pgsql';
         } else {
-            $path = $_ENV['DB_SQLITE_PATH'] ?? 'storage/fort.sqlite';
+            $path = Env::get('DB_SQLITE_PATH', 'storage/fort.sqlite');
             $path = dirname(__DIR__, 2) . '/' . ltrim($path, '/');
             $this->pdo = new PDO("sqlite:{$path}", null, null, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,

@@ -228,7 +228,7 @@ class InstallController
         $envContent .= PHP_EOL . '# --- Session ---' . PHP_EOL;
         $envContent .= 'SESSION_DRIVER=database' . PHP_EOL;
         $envContent .= 'SESSION_LIFETIME=120' . PHP_EOL;
-        $envContent .= 'SESSION_HTTPS_ONLY=false' . PHP_EOL . PHP_EOL;
+        $envContent .= 'SESSION_HTTPS_ONLY=true' . PHP_EOL . PHP_EOL;
         $envContent .= '# --- Mail ---' . PHP_EOL;
         $envContent .= 'MAIL_DRIVER=smtp' . PHP_EOL;
         $envContent .= 'MAIL_HOST=smtp.mailtrap.io' . PHP_EOL;
@@ -244,8 +244,8 @@ class InstallController
         $envContent .= 'RATE_LIMIT_CREATE_LINK=30' . PHP_EOL;
         $envContent .= 'RATE_LIMIT_API=60' . PHP_EOL . PHP_EOL;
         $envContent .= '# --- Security ---' . PHP_EOL;
-        $envContent .= 'CORS_ALLOWED_ORIGINS=*' . PHP_EOL;
-        $envContent .= 'SESSION_SECURE_COOKIE=false' . PHP_EOL;
+        $envContent .= 'CORS_ALLOWED_ORIGINS=' . (Env::get('APP_URL', 'https://localhost')) . PHP_EOL;
+        $envContent .= 'SESSION_SECURE_COOKIE=true' . PHP_EOL;
         $envContent .= 'TRUSTED_PROXIES=' . PHP_EOL . PHP_EOL;
         $envContent .= '# --- 2FA ---' . PHP_EOL;
         $envContent .= 'TOTP_ISSUER="' . str_replace('"', '\"', $appName) . '"' . PHP_EOL . PHP_EOL;

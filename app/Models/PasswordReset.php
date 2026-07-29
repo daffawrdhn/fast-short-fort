@@ -23,13 +23,15 @@ class PasswordReset
             $expiresAt = date('Y-m-d H:i:s', time() + 3600);
         }
 
+        $tokenHash = hash('sha256', $token);
+
         $stmt = self::db()->prepare('
             INSERT INTO password_resets (email, token, expires_at, created_at)
             VALUES (:email, :token, :expires_at, CURRENT_TIMESTAMP)
         ');
         $stmt->execute([
             ':email' => $email,
-            ':token' => $token,
+            ':token' => $tokenHash,
             ':expires_at' => $expiresAt,
         ]);
 
@@ -45,12 +47,14 @@ class PasswordReset
         $driver = self::db()->getAttribute(\PDO::ATTR_DRIVER_NAME);
         $dateExpr = $driver === 'pgsql' ? 'CURRENT_TIMESTAMP' : "datetime('now')";
 
+        $tokenHash = hash('sha256', $token);
+
         $stmt = self::db()->prepare("
             SELECT * FROM password_resets
             WHERE token = :token AND expires_at > {$dateExpr}
             ORDER BY created_at DESC LIMIT 1
         ");
-        $stmt->execute([':token' => $token]);
+        $stmt->execute([':token' => $tokenHash]);
         $data = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if (!$data) {

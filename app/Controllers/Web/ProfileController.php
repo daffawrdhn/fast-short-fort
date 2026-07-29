@@ -83,12 +83,14 @@ class ProfileController
                 $res->redirect('/profile')->send();
                 return;
             }
-            if (strlen($password) < 8) {
-                $this->session->flash('error', 'Password must be at least 8 characters.');
+            if (strlen($password) < 8 || !preg_match('/[A-Z]/', $password) || !preg_match('/[a-z]/', $password) || !preg_match('/[0-9]/', $password)) {
+                $this->session->flash('error', 'Password must be at least 8 characters with uppercase, lowercase, and a number.');
                 $res->redirect('/profile')->send();
                 return;
             }
             $user->update(['password_hash' => Hash::make($password)]);
+            $authService = new \App\Services\AuthService();
+            $authService->clearRememberToken($user);
         }
 
         $this->session->flash('success', 'Profile updated successfully.');

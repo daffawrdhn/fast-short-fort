@@ -109,7 +109,7 @@ class AuthController
         $this->session->remove($attemptsKey);
         $this->session->remove($attemptsKey . '_locked_until');
 
-        $twofaEnabled = ($_ENV['FEATURE_TWOFA'] ?? 'false') === 'true';
+        $twofaEnabled = Env::get('FEATURE_TWOFA', 'false') === 'true';
 
         if ($twofaEnabled && $user->two_fa_enabled && $user->two_fa_secret !== null) {
             $_SESSION['_2fa_user_id'] = $user->id;
@@ -241,7 +241,7 @@ class AuthController
             $user = User::findById($userId);
 
             $mailDriver = Env::get('MAIL_DRIVER', '');
-            $emailVerificationEnabled = ($_ENV['FEATURE_EMAIL_VERIFICATION'] ?? 'false') === 'true';
+            $emailVerificationEnabled = Env::get('FEATURE_EMAIL_VERIFICATION', 'false') === 'true';
             if ($mailDriver === 'smtp' && $emailVerificationEnabled && $user !== null) {
                 try {
                     $emailService = new EmailService();
@@ -266,6 +266,12 @@ class AuthController
 
     public function logout(Request $req, Response $res): void
     {
+        if (!$req->validateCsrf()) {
+            $this->session->flash('error', 'Invalid request.');
+            $res->redirect('/')->send();
+            return;
+        }
+
         $userId = $this->session->get('user_id');
         if ($userId !== null) {
             $user = User::findById($userId);
@@ -276,7 +282,8 @@ class AuthController
         }
 
         $this->session->destroy();
-        setcookie('remember_me', '', time() - 3600, '/', '', false, true);
+        $secure = Env::get('SESSION_HTTPS_ONLY', 'false') === 'true';
+        setcookie('remember_me', '', time() - 3600, '/', '', $secure, true);
         $res->redirect('/login')->send();
     }
 
@@ -414,6 +421,12 @@ class AuthController
 
     public function showResetPassword(Request $req, Response $res, array $params): void
     {
+        if (empty($params['token'])) {
+            if ($this->session->hasFlash('reset_token')) {
+                $params['token'] = $this->session->flash('reset_token');
+            }
+        }
+
         $token = $req->query('token', $params['token'] ?? '');
 
         if ($token === '') {
@@ -455,13 +468,15 @@ class AuthController
 
         if (strlen($password) < 8) {
             $this->session->flash('error', 'Password must be at least 8 characters.');
-            $res->redirect('/reset-password?token=' . urlencode($token))->send();
+            $this->session->flash('reset_token', $token);
+            $res->redirect('/reset-password')->send();
             return;
         }
 
         if ($password !== $passwordConfirm) {
             $this->session->flash('error', 'Passwords do not match.');
-            $res->redirect('/reset-password?token=' . urlencode($token))->send();
+            $this->session->flash('reset_token', $token);
+            $res->redirect('/reset-password')->send();
             return;
         }
 

@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Core\Database;
-use App\Core\Request;
+use App\Core\Env;
+use App\Core\Logger;
 use PDO;
 
 class AnalyticsService
@@ -30,7 +31,7 @@ class AnalyticsService
         $parsed = $this->parseUserAgent($userAgent);
         $referrer = $request->header('Referer', '');
 
-        $geoEnabled = ($_ENV['FEATURE_GEOLOCATION'] ?? 'false') === 'true';
+        $geoEnabled = Env::get('FEATURE_GEOLOCATION', 'false') === 'true';
         $geo = $geoEnabled ? $this->lookupIP($ip) : ['country' => null, 'city' => null, 'lat' => null, 'lon' => null];
 
         $stmt = $this->db->prepare('

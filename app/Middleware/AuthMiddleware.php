@@ -27,7 +27,8 @@ class AuthMiddleware extends Middleware
             if ($user !== null) {
                 $authService->createSession($user);
                 $newToken = $authService->generateRememberToken($user);
-                setcookie('remember_me', $newToken, time() + 86400 * 30, '/', '', false, true);
+                $secure = \App\Core\Env::get('SESSION_HTTPS_ONLY', 'false') === 'true';
+                setcookie('remember_me', $newToken, time() + 86400 * 30, '/', '', $secure, true);
                 return $next($request, $response);
             }
         }

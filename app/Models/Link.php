@@ -207,7 +207,6 @@ class Link
             'original_url' => $this->original_url,
             'slug' => $this->slug,
             'custom_domain_id' => $this->custom_domain_id,
-            'password_hash' => $this->password_hash,
             'expires_at' => $this->expires_at,
             'click_limit' => $this->click_limit,
             'is_active' => $this->is_active,

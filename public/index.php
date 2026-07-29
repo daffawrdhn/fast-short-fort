@@ -66,9 +66,10 @@ $router->get('/verify-email', [\App\Controllers\Web\AuthController::class, 'show
 $router->get('/verify-email/{token}', [\App\Controllers\Web\AuthController::class, 'verifyEmail']);
 $router->post('/verify-email/resend', [\App\Controllers\Web\AuthController::class, 'resendVerification']);
 $router->get('/forgot-password', [\App\Controllers\Web\AuthController::class, 'showForgotPassword'])->name('forgot.password');
-$router->post('/forgot-password', [\App\Controllers\Web\AuthController::class, 'sendResetLink']);
+$router->post('/forgot-password', [\App\Controllers\Web\AuthController::class, 'sendResetLink'])->middleware(\App\Middleware\RateLimitMiddleware::class);
 $router->get('/reset-password/{token}', [\App\Controllers\Web\AuthController::class, 'showResetPassword'])->name('reset.password');
-$router->post('/reset-password/{token}', [\App\Controllers\Web\AuthController::class, 'resetPassword']);
+$router->get('/reset-password', [\App\Controllers\Web\AuthController::class, 'showResetPassword']);
+$router->post('/reset-password/{token}', [\App\Controllers\Web\AuthController::class, 'resetPassword'])->middleware(\App\Middleware\RateLimitMiddleware::class);
 $router->get('/twofa/challenge', [\App\Controllers\Web\AuthController::class, 'showTwoFA'])->name('2fa.challenge');
 $router->post('/twofa/challenge', [\App\Controllers\Web\AuthController::class, 'verifyTwoFA']);
 $router->get('/twofa/setup', [\App\Controllers\Web\AuthController::class, 'showSetupTwoFA'])->name('2fa.setup');
@@ -98,14 +99,23 @@ $router->group('', function (Router $router) {
     $router->post('/profile', [\App\Controllers\Web\ProfileController::class, 'update']);
     $router->get('/settings', [\App\Controllers\Web\SettingsController::class, 'index'])->name('settings');
     $router->post('/settings', [\App\Controllers\Web\SettingsController::class, 'update']);
+}, [\App\Middleware\AuthMiddleware::class]);
+
+$router->group('', function (Router $router) {
     $router->get('/admin', [\App\Controllers\Web\AdminController::class, 'index'])->name('admin');
     $router->get('/admin/users', [\App\Controllers\Web\AdminController::class, 'users']);
+    $router->post('/admin/users/create', [\App\Controllers\Web\AdminController::class, 'createUser']);
+    $router->post('/admin/users/{id}/edit', [\App\Controllers\Web\AdminController::class, 'editUser']);
+    $router->post('/admin/users/{id}/delete', [\App\Controllers\Web\AdminController::class, 'deleteUser']);
     $router->get('/admin/workspaces', [\App\Controllers\Web\AdminController::class, 'workspaces']);
+    $router->post('/admin/workspaces/{id}/delete', [\App\Controllers\Web\AdminController::class, 'deleteWorkspace']);
     $router->get('/admin/settings', [\App\Controllers\Web\AdminController::class, 'settings']);
     $router->post('/admin/settings', [\App\Controllers\Web\AdminController::class, 'updateSettings']);
     $router->get('/admin/health', [\App\Controllers\Web\AdminController::class, 'health']);
     $router->get('/admin/blocklist', [\App\Controllers\Web\AdminController::class, 'blocklist']);
     $router->post('/admin/blocklist', [\App\Controllers\Web\AdminController::class, 'addToBlocklist']);
+    $router->post('/admin/blocklist/import', [\App\Controllers\Web\AdminController::class, 'importBlocklist']);
+    $router->post('/admin/blocklist/{id}/delete', [\App\Controllers\Web\AdminController::class, 'removeBlocklist']);
     $router->get('/admin/logs', [\App\Controllers\Web\AdminController::class, 'logs']);
 }, [\App\Middleware\AuthMiddleware::class, \App\Middleware\AdminMiddleware::class]);
 
