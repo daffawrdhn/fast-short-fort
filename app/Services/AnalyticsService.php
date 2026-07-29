@@ -32,21 +32,22 @@ class AnalyticsService
         $parsed = $this->parseUserAgent($userAgent);
         $referrer = $request->header('Referer', '');
 
-        $geoEnabled = Env::get('FEATURE_GEOLOCATION', 'false') === 'true';
+        $geoEnabled = Env::get('FEATURE_GEOLOCATION', 'true') === 'true';
         $geo = $geoEnabled ? $this->lookupIP($ip) : ['country' => null, 'city' => null, 'lat' => null, 'lon' => null];
 
         $stmt = $this->db->prepare('
             INSERT INTO link_clicks
-                (link_id, ip_hash, country, city, latitude, longitude,
+                (link_id, ip_hash, ip_address, country, city, latitude, longitude,
                  device_type, browser, browser_version, os, referrer, user_agent, clicked_at)
             VALUES
-                (:link_id, :ip_hash, :country, :city, :latitude, :longitude,
+                (:link_id, :ip_hash, :ip_address, :country, :city, :latitude, :longitude,
                  :device_type, :browser, :browser_version, :os, :referrer, :user_agent, CURRENT_TIMESTAMP)
         ');
 
         $stmt->execute([
             ':link_id'         => $linkId,
             ':ip_hash'         => $ipHash,
+            ':ip_address'      => $ip,
             ':country'         => $geo['country'],
             ':city'            => $geo['city'],
             ':latitude'        => $geo['lat'],
