@@ -125,6 +125,70 @@ php database/migrate.php
 
 ---
 
+## 🪟 Instalasi di XAMPP
+
+1. **Letakkan project** di `C:\xampp\htdocs\fort`
+2. **Install dependencies**:
+   ```bash
+   cd C:\xampp\htdocs\fort
+   composer install
+   ```
+3. **Konfigurasi `.env`**:
+   ```bash
+   copy .env.example .env
+   ```
+   Edit `.env` — `DB_DRIVER=sqlite` sudah default, tidak perlu setup database.
+4. **Set permission**:
+   Pastikan folder `storage/` writable (Properties → Security → beri write untuk User).
+5. **Aktifkan `mod_rewrite`**:
+   - Buka `C:\xampp\apache\conf\httpd.conf`
+   - Hapus `#` dari `#LoadModule rewrite_module modules/mod_rewrite.so`
+   - Cari `<Directory "C:/xampp/htdocs">` dan ubah `AllowOverride None` menjadi `AllowOverride All`
+   - Restart Apache via XAMPP Control Panel
+6. **Jalankan installer**:
+   Buka `http://localhost/fort` di browser dan ikuti wizard.
+
+### Virtual Host (opsional)
+```apache
+<VirtualHost *:80>
+    DocumentRoot "C:/xampp/htdocs/fort/public"
+    ServerName fort.local
+</VirtualHost>
+```
+Tambahkan `127.0.0.1 fort.local` di `C:\Windows\System32\drivers\etc\hosts`.
+
+---
+
+## 🪟 Instalasi di Laragon
+
+1. **Letakkan project** di `C:\laragon\www\fort`
+2. **Install dependencies**:
+   ```bash
+   cd C:\laragon\www\fort
+   composer install
+   ```
+3. **Konfigurasi `.env`**:
+   ```bash
+   copy .env.example .env
+   ```
+   `DB_DRIVER=sqlite` sudah default.
+4. **Set permission**: Laragon otomatis memberikan permission yang tepat.
+5. **Aktifkan `mod_rewrite`**:
+   - Laragon sudah mengaktifkan `mod_rewrite` secara default.
+   - Pastikan `AllowOverride All` di `C:\laragon\etc\apache2\sites-enabled\*.conf`
+6. **Jalankan installer**:
+   - Klik **"WWW"** pada Laragon → pilih `fort`
+   - Atau buka `http://fort.test` (Laragon auto virtual host)
+
+### Menggunakan PostgreSQL di Laragon
+- Laragon sudah include PostgreSQL. Klik kanan Laragon → Tools → Quick Add → PostgreSQL
+- Di `.env` ubah `DB_DRIVER=pgsql` dan isi koneksi database
+
+### Pretty URL
+Laragon sudah auto-configure rewrite. Pastikan file `public/.htaccess` ada (sudah disediakan).
+
+---
+
 ## 🗂 Project Structure
 
 ```
