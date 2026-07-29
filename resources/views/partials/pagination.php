@@ -1,6 +1,17 @@
 <nav class="pagination-container" role="navigation" aria-label="Pagination">
-  <div class="pagination-info text-muted">
-    Showing <?= $this->escape((string) ((($currentPage ?? 1) - 1) * ($perPage ?? 20) + 1)) ?> to <?= $this->escape((string) min(($currentPage ?? 1) * ($perPage ?? 20), $total ?? 0)) ?> of <?= $this->escape((string) ($total ?? 0)) ?> results
+  <div class="pagination-info text-muted" style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+    <span>Showing <?= $this->escape((string) ((($currentPage ?? 1) - 1) * ($perPage ?? 10) + 1)) ?> to <?= $this->escape((string) min(($currentPage ?? 1) * ($perPage ?? 10), $total ?? 0)) ?> of <?= $this->escape((string) ($total ?? 0)) ?> results</span>
+    
+    <div class="pagination-limit" style="display: flex; align-items: center; gap: 0.5rem;">
+      <label for="limit-select-links" style="font-size: 0.875rem;">Rows per page:</label>
+      <?php $currentLimit = $perPage ?? 10; ?>
+      <select id="limit-select-links" class="form-control" style="width: auto; padding: 0.25rem 0.5rem; height: auto;" onchange="window.location.href='?page=1<?= !empty($search) ? '&search='.urlencode($search) : '' ?><?= !empty($filter) && $filter !== 'all' ? '&filter='.urlencode($filter) : '' ?>&limit='+this.value">
+        <option value="10" <?= $currentLimit == 10 ? 'selected' : '' ?>>10</option>
+        <option value="25" <?= $currentLimit == 25 ? 'selected' : '' ?>>25</option>
+        <option value="50" <?= $currentLimit == 50 ? 'selected' : '' ?>>50</option>
+        <option value="100" <?= $currentLimit == 100 ? 'selected' : '' ?>>100</option>
+      </select>
+    </div>
   </div>
 
   <?php if (($totalPages ?? 1) > 1): ?>
@@ -64,6 +75,7 @@ function buildPaginationUrl(int $page, string $search, string $filter): string {
   $params = ['page' => $page];
   if ($search !== '') $params['search'] = $search;
   if ($filter !== '' && $filter !== 'all') $params['filter'] = $filter;
+  if (isset($_GET['limit'])) $params['limit'] = $_GET['limit'];
   return '/links?' . http_build_query($params);
 }
 ?>

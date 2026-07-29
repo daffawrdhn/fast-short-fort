@@ -57,13 +57,29 @@
   </table>
 </div>
 
-<?php if (!empty($totalPages) && $totalPages > 1): ?>
-<nav class="pagination" aria-label="Workspace list pagination">
-  <?php for ($p = 1; $p <= $totalPages; $p++): ?>
-  <a href="/admin/workspaces?page=<?= $p ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" class="page-link <?= ($page ?? 1) == $p ? 'active' : '' ?>"><?= $p ?></a>
-  <?php endfor; ?>
-</nav>
-<?php endif; ?>
+<?php
+$currentLimit = $perPage ?? 10;
+$searchParam = !empty($search) ? '&search=' . urlencode($search) : '';
+$limitParam = '&limit=' . $currentLimit;
+?>
+<div class="pagination-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+  <div class="pagination-limit">
+    <label for="limit-select" class="text-muted" style="font-size: 0.875rem; margin-right: 0.5rem;">Rows per page:</label>
+    <select id="limit-select" class="form-control" style="width: auto; display: inline-block; padding: 0.25rem 0.5rem; height: auto;" onchange="window.location.href='?page=1<?= $searchParam ?>&limit='+this.value">
+      <option value="10" <?= $currentLimit == 10 ? 'selected' : '' ?>>10</option>
+      <option value="25" <?= $currentLimit == 25 ? 'selected' : '' ?>>25</option>
+      <option value="50" <?= $currentLimit == 50 ? 'selected' : '' ?>>50</option>
+      <option value="100" <?= $currentLimit == 100 ? 'selected' : '' ?>>100</option>
+    </select>
+  </div>
+  <?php if (!empty($totalPages) && $totalPages > 1): ?>
+  <nav class="pagination" aria-label="Workspace list pagination" style="margin-top: 0;">
+    <?php for ($p = 1; $p <= $totalPages; $p++): ?>
+    <a href="/admin/workspaces?page=<?= $p ?><?= $searchParam ?><?= $limitParam ?>" class="page-link <?= ($page ?? 1) == $p ? 'active' : '' ?>"><?= $p ?></a>
+    <?php endfor; ?>
+  </nav>
+  <?php endif; ?>
+</div>
 
 <?php foreach ($workspaces as $w): ?>
 <div id="edit-plan-<?= $w['id'] ?? 0 ?>" class="modal" role="dialog" aria-modal="true" aria-labelledby="edit-plan-title-<?= $w['id'] ?? 0 ?>">

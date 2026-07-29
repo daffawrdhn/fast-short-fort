@@ -104,7 +104,9 @@ class AdminController
     {
         $search = trim($req->query('search', ''));
         $page = max(1, (int) $req->query('page', 1));
-        $perPage = 8;
+        $allowedLimits = [10, 25, 50, 100];
+        $perPage = (int) $req->query('limit', 10);
+        if (!in_array($perPage, $allowedLimits, true)) $perPage = 10;
         $offset = ($page - 1) * $perPage;
 
         try {
@@ -150,6 +152,7 @@ class AdminController
             'page' => $page,
             'totalPages' => $totalPages,
             'total' => $total,
+            'perPage' => $perPage,
             'csrf' => $this->session->csrfToken(),
         ]);
         $this->adminLayout($res, 'Users', 'users', $html);
@@ -300,7 +303,9 @@ class AdminController
     {
         $search = trim($req->query('search', ''));
         $page = max(1, (int) $req->query('page', 1));
-        $perPage = 8;
+        $allowedLimits = [10, 25, 50, 100];
+        $perPage = (int) $req->query('limit', 10);
+        if (!in_array($perPage, $allowedLimits, true)) $perPage = 10;
         $offset = ($page - 1) * $perPage;
 
         try {
@@ -345,6 +350,7 @@ class AdminController
             'page' => $page,
             'totalPages' => $totalPages,
             'total' => $total,
+            'perPage' => $perPage,
             'csrf' => $this->session->csrfToken(),
         ]);
         $this->adminLayout($res, 'Workspaces', 'workspaces', $html);
@@ -569,7 +575,9 @@ class AdminController
         $dateFrom = trim($req->query('date_from', ''));
         $dateTo = trim($req->query('date_to', ''));
         $page = max(1, (int) $req->query('page', 1));
-        $perPage = 50;
+        $allowedLimits = [10, 25, 50, 100];
+        $perPage = (int) $req->query('limit', 10);
+        if (!in_array($perPage, $allowedLimits, true)) $perPage = 10;
         $offset = ($page - 1) * $perPage;
 
         $conditions = [];
@@ -634,6 +642,7 @@ class AdminController
             'page' => $page,
             'totalPages' => $totalPages,
             'total' => $total,
+            'perPage' => $perPage,
             'csrf' => $this->session->csrfToken(),
         ]);
         $this->adminLayout($res, 'Audit Logs', 'logs', $html);

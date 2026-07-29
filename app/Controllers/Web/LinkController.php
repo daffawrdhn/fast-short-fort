@@ -61,7 +61,9 @@ class LinkController
         $order = strtolower($request->query('order', 'desc')) === 'asc' ? 'ASC' : 'DESC';
         $filter = $request->query('filter', 'all');
         $page = max(1, (int) $request->query('page', 1));
-        $perPage = 20;
+        $allowedLimits = [10, 25, 50, 100];
+        $perPage = (int) $request->query('limit', 10);
+        if (!in_array($perPage, $allowedLimits, true)) $perPage = 10;
         $offset = ($page - 1) * $perPage;
 
         $allowedSort = ['created_at', 'clicks', 'title'];
