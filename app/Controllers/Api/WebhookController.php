@@ -19,6 +19,15 @@ class WebhookController
         $this->api = new ApiService();
     }
 
+    private function authorizeWorkspace(int $workspaceId, int $userId): bool
+    {
+        $stmt = \App\Core\Database::connection()->prepare(
+            'SELECT COUNT(*) FROM workspace_members WHERE workspace_id = :wid AND user_id = :uid'
+        );
+        $stmt->execute([':wid' => $workspaceId, ':uid' => $userId]);
+        return (int) $stmt->fetchColumn() > 0;
+    }
+
     public function index(Request $request, Response $response, array $params = []): void
     {
         $workspaceId = $_SERVER['auth_workspace_id'] ?? null;
@@ -107,6 +116,12 @@ class WebhookController
             return;
         }
 
+        $userId = (int) ($_SERVER['auth_user_id'] ?? 0);
+        if ($userId === 0 || !$this->authorizeWorkspace((int) $webhook['workspace_id'], $userId)) {
+            $this->api->errorResponse('Forbidden.', 403, 'FORBIDDEN')->send();
+            return;
+        }
+
         $data = $request->only(['url', 'events', 'secret']);
         $fields = [];
         $bindings = [':id' => $id];
@@ -155,6 +170,12 @@ class WebhookController
             return;
         }
 
+        $userId = (int) ($_SERVER['auth_user_id'] ?? 0);
+        if ($userId === 0 || !$this->authorizeWorkspace((int) $webhook['workspace_id'], $userId)) {
+            $this->api->errorResponse('Forbidden.', 403, 'FORBIDDEN')->send();
+            return;
+        }
+
         $db->prepare('DELETE FROM webhooks WHERE id = :id')->execute([':id' => $id]);
 
         $this->api->noContentResponse()->send();
@@ -171,6 +192,12 @@ class WebhookController
 
         if ($webhook === false) {
             $this->api->errorResponse('Webhook not found.', 404, 'NOT_FOUND')->send();
+            return;
+        }
+
+        $userId = (int) ($_SERVER['auth_user_id'] ?? 0);
+        if ($userId === 0 || !$this->authorizeWorkspace((int) $webhook['workspace_id'], $userId)) {
+            $this->api->errorResponse('Forbidden.', 403, 'FORBIDDEN')->send();
             return;
         }
 

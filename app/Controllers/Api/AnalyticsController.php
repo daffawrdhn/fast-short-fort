@@ -19,6 +19,15 @@ class AnalyticsController
         $this->api = new ApiService();
     }
 
+    private function authorizeWorkspace(int $workspaceId, int $userId): bool
+    {
+        $stmt = \App\Core\Database::connection()->prepare(
+            'SELECT COUNT(*) FROM workspace_members WHERE workspace_id = :wid AND user_id = :uid'
+        );
+        $stmt->execute([':wid' => $workspaceId, ':uid' => $userId]);
+        return (int) $stmt->fetchColumn() > 0;
+    }
+
     public function linkAnalytics(Request $request, Response $response, array $params = []): void
     {
         $linkId = $params['linkId'] ?? null;
@@ -33,6 +42,12 @@ class AnalyticsController
 
         if ($link === false) {
             $this->api->errorResponse('Link not found.', 404, 'NOT_FOUND')->send();
+            return;
+        }
+
+        $userId = (int) ($_SERVER['auth_user_id'] ?? 0);
+        if ($userId === 0 || !$this->authorizeWorkspace((int) $link['workspace_id'], $userId)) {
+            $this->api->errorResponse('Forbidden.', 403, 'FORBIDDEN')->send();
             return;
         }
 
@@ -102,6 +117,12 @@ class AnalyticsController
             return;
         }
 
+        $userId = (int) ($_SERVER['auth_user_id'] ?? 0);
+        if ($userId === 0 || !$this->authorizeWorkspace((int) $workspace['id'], $userId)) {
+            $this->api->errorResponse('Forbidden.', 403, 'FORBIDDEN')->send();
+            return;
+        }
+
         $totalLinksStmt = $db->prepare('SELECT COUNT(*) FROM links WHERE workspace_id = :id');
         $totalLinksStmt->execute([':id' => $workspaceId]);
         $totalLinks = (int) $totalLinksStmt->fetchColumn();
@@ -148,6 +169,12 @@ class AnalyticsController
 
         if ($link === false) {
             $this->api->errorResponse('Link not found.', 404, 'NOT_FOUND')->send();
+            return;
+        }
+
+        $userId = (int) ($_SERVER['auth_user_id'] ?? 0);
+        if ($userId === 0 || !$this->authorizeWorkspace((int) $link['workspace_id'], $userId)) {
+            $this->api->errorResponse('Forbidden.', 403, 'FORBIDDEN')->send();
             return;
         }
 

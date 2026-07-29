@@ -44,6 +44,23 @@ class WorkspaceController
         $this->api->successResponse($workspaces)->send();
     }
 
+    private function authorizeWorkspace(int $workspaceId, int $userId): bool
+    {
+        $db = \App\Core\Database::connection();
+        $stmt = $db->prepare(
+            'SELECT COUNT(*) FROM workspaces WHERE id = :wid AND owner_id = :uid'
+        );
+        $stmt->execute([':wid' => $workspaceId, ':uid' => $userId]);
+        if ((int) $stmt->fetchColumn() > 0) {
+            return true;
+        }
+        $stmt = $db->prepare(
+            'SELECT COUNT(*) FROM workspace_members WHERE workspace_id = :wid AND user_id = :uid'
+        );
+        $stmt->execute([':wid' => $workspaceId, ':uid' => $userId]);
+        return (int) $stmt->fetchColumn() > 0;
+    }
+
     public function show(Request $request, Response $response, array $params = []): void
     {
         $id = $params['id'] ?? null;
@@ -55,6 +72,12 @@ class WorkspaceController
 
         if ($workspace === false) {
             $this->api->errorResponse('Workspace not found.', 404, 'NOT_FOUND')->send();
+            return;
+        }
+
+        $userId = (int) ($_SERVER['auth_user_id'] ?? 0);
+        if ($userId === 0 || !$this->authorizeWorkspace($id, $userId)) {
+            $this->api->errorResponse('Forbidden.', 403, 'FORBIDDEN')->send();
             return;
         }
 
@@ -131,6 +154,12 @@ class WorkspaceController
             return;
         }
 
+        $userId = (int) ($_SERVER['auth_user_id'] ?? 0);
+        if ($userId === 0 || !$this->authorizeWorkspace($id, $userId)) {
+            $this->api->errorResponse('Forbidden.', 403, 'FORBIDDEN')->send();
+            return;
+        }
+
         $data = $request->only(['name', 'slug', 'description']);
         $fields = [];
         $bindings = [':id' => $id];
@@ -170,6 +199,12 @@ class WorkspaceController
             return;
         }
 
+        $userId = (int) ($_SERVER['auth_user_id'] ?? 0);
+        if ($userId === 0 || !$this->authorizeWorkspace($id, $userId)) {
+            $this->api->errorResponse('Forbidden.', 403, 'FORBIDDEN')->send();
+            return;
+        }
+
         $db->prepare('DELETE FROM workspace_members WHERE workspace_id = :id')->execute([':id' => $id]);
         $db->prepare('UPDATE links SET workspace_id = NULL, deleted_at = CURRENT_TIMESTAMP WHERE workspace_id = :id')->execute([':id' => $id]);
         $db->prepare('DELETE FROM workspaces WHERE id = :id')->execute([':id' => $id]);
@@ -188,6 +223,12 @@ class WorkspaceController
 
         if ($workspace === false) {
             $this->api->errorResponse('Workspace not found.', 404, 'NOT_FOUND')->send();
+            return;
+        }
+
+        $userId = (int) ($_SERVER['auth_user_id'] ?? 0);
+        if ($userId === 0 || !$this->authorizeWorkspace($id, $userId)) {
+            $this->api->errorResponse('Forbidden.', 403, 'FORBIDDEN')->send();
             return;
         }
 
@@ -215,6 +256,12 @@ class WorkspaceController
 
         if ($workspace === false) {
             $this->api->errorResponse('Workspace not found.', 404, 'NOT_FOUND')->send();
+            return;
+        }
+
+        $userId = (int) ($_SERVER['auth_user_id'] ?? 0);
+        if ($userId === 0 || !$this->authorizeWorkspace($id, $userId)) {
+            $this->api->errorResponse('Forbidden.', 403, 'FORBIDDEN')->send();
             return;
         }
 
@@ -280,6 +327,12 @@ class WorkspaceController
             return;
         }
 
+        $authUserId = (int) ($_SERVER['auth_user_id'] ?? 0);
+        if ($authUserId === 0 || !$this->authorizeWorkspace($id, $authUserId)) {
+            $this->api->errorResponse('Forbidden.', 403, 'FORBIDDEN')->send();
+            return;
+        }
+
         $db->prepare('DELETE FROM workspace_members WHERE workspace_id = :workspace_id AND user_id = :user_id')
             ->execute([':workspace_id' => $id, ':user_id' => $userId]);
 
@@ -299,6 +352,12 @@ class WorkspaceController
 
         if ($workspace === false) {
             $this->api->errorResponse('Workspace not found.', 404, 'NOT_FOUND')->send();
+            return;
+        }
+
+        $authUserId = (int) ($_SERVER['auth_user_id'] ?? 0);
+        if ($authUserId === 0 || !$this->authorizeWorkspace($id, $authUserId)) {
+            $this->api->errorResponse('Forbidden.', 403, 'FORBIDDEN')->send();
             return;
         }
 

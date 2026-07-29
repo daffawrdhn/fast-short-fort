@@ -103,7 +103,7 @@ $router->group('', function (Router $router) {
     $router->get('/admin/blocklist', [\App\Controllers\Web\AdminController::class, 'blocklist']);
     $router->post('/admin/blocklist', [\App\Controllers\Web\AdminController::class, 'addToBlocklist']);
     $router->get('/admin/logs', [\App\Controllers\Web\AdminController::class, 'logs']);
-}, [\App\Middleware\AuthMiddleware::class]);
+}, [\App\Middleware\AuthMiddleware::class, \App\Middleware\AdminMiddleware::class]);
 
 $router->get('/p/{slug}', [\App\Controllers\Web\LinkController::class, 'showPasswordForm'])->name('link.password');
 $router->post('/p/{slug}', [\App\Controllers\Web\LinkController::class, 'verifyPassword']);

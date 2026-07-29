@@ -54,10 +54,20 @@ class JWTService
     public function validateToken(string $token): ?object
     {
         try {
-            return JWT::decode($token, new Key($this->secret, $this->algorithm));
+            $payload = JWT::decode($token, new Key($this->secret, $this->algorithm));
         } catch (\Throwable) {
             return null;
         }
+
+        $stmt = \App\Core\Database::connection()->prepare(
+            'SELECT COUNT(*) FROM token_blacklist WHERE token_hash = :hash AND expires_at > CURRENT_TIMESTAMP'
+        );
+        $stmt->execute([':hash' => hash('sha256', $token)]);
+        if ((int) $stmt->fetchColumn() > 0) {
+            return null;
+        }
+
+        return $payload;
     }
 
     public function getPayload(string $token): ?array

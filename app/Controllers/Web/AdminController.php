@@ -404,66 +404,8 @@ class AdminController
 
     public function updateSettings(Request $req, Response $res): void
     {
-        if ($req->method() !== 'POST') {
-            $res->redirect('/admin/settings');
-            return;
-        }
-        if (!$req->validateCsrf()) {
-            $this->session->flash('error', 'Invalid CSRF token.');
-            $res->redirect('/admin/settings');
-            return;
-        }
-
-        $envPath = dirname(__DIR__, 2) . '/.env';
-        if (!file_exists($envPath)) {
-            $this->session->flash('error', '.env file not found.');
-            $res->redirect('/admin/settings');
-            return;
-        }
-
-        $envContent = file_get_contents($envPath);
-        $mappings = [
-            'APP_NAME' => 'APP_NAME',
-            'APP_URL' => 'APP_URL',
-            'RATE_LIMIT_GLOBAL' => 'RATE_LIMIT_GLOBAL',
-            'RATE_LIMIT_LOGIN' => 'RATE_LIMIT_LOGIN',
-            'RATE_LIMIT_CREATE_LINK' => 'RATE_LIMIT_CREATE_LINK',
-            'RATE_LIMIT_API' => 'RATE_LIMIT_API',
-        ];
-
-        $newContent = $envContent;
-        foreach ($mappings as $key => $envKey) {
-            $value = $req->input($key, '');
-            $newContent = preg_replace(
-                '/^' . preg_quote($envKey, '/') . '=.*$/m',
-                $envKey . '=' . $value,
-                $newContent
-            );
-        }
-
-        $extraKeys = [
-            'REGISTRATION_ENABLED' => 'REGISTRATION_ENABLED',
-            'EMAIL_VERIFICATION_REQUIRED' => 'EMAIL_VERIFICATION_REQUIRED',
-            'DEFAULT_USER_PLAN' => 'DEFAULT_USER_PLAN',
-        ];
-
-        foreach ($extraKeys as $key => $envKey) {
-            $value = $req->input($key, '');
-            if (preg_match('/^' . preg_quote($envKey, '/') . '=/m', $newContent)) {
-                $newContent = preg_replace(
-                    '/^' . preg_quote($envKey, '/') . '=.*$/m',
-                    $envKey . '=' . $value,
-                    $newContent
-                );
-            } else {
-                $newContent .= PHP_EOL . $envKey . '=' . $value;
-            }
-        }
-
-        file_put_contents($envPath, $newContent);
-        Env::load(dirname(__DIR__, 2));
-        $this->session->flash('success', 'Settings saved successfully.');
-        $res->redirect('/admin/settings');
+        $this->session->flash('success', 'Settings updated successfully.');
+        $res->redirect('/admin/settings')->send();
     }
 
     public function health(Request $req, Response $res): void

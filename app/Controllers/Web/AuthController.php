@@ -92,7 +92,8 @@ class AuthController
 
         if ($remember) {
             $token = $authService->generateRememberToken($user);
-            setcookie('remember_me', $token, time() + 86400 * 30, '/', '', false, true);
+            $secure = Env::get('SESSION_HTTPS_ONLY', 'false') === 'true';
+            setcookie('remember_me', $token, time() + 86400 * 30, '/', '', $secure, true);
         }
 
         $this->session->regenerate();
@@ -139,6 +140,24 @@ class AuthController
 
         if (strlen($password) < 8) {
             $this->session->flash('error', 'Password must be at least 8 characters.');
+            $res->redirect('/register')->send();
+            return;
+        }
+
+        if (!preg_match('/[A-Z]/', $password)) {
+            $this->session->flash('error', 'Password must contain at least one uppercase letter.');
+            $res->redirect('/register')->send();
+            return;
+        }
+
+        if (!preg_match('/[a-z]/', $password)) {
+            $this->session->flash('error', 'Password must contain at least one lowercase letter.');
+            $res->redirect('/register')->send();
+            return;
+        }
+
+        if (!preg_match('/[0-9]/', $password)) {
+            $this->session->flash('error', 'Password must contain at least one number.');
             $res->redirect('/register')->send();
             return;
         }
@@ -490,7 +509,8 @@ class AuthController
 
         if (!empty($_COOKIE['remember_me'])) {
             $token = $authService->generateRememberToken($user);
-            setcookie('remember_me', $token, time() + 86400 * 30, '/', '', false, true);
+            $secure = Env::get('SESSION_HTTPS_ONLY', 'false') === 'true';
+            setcookie('remember_me', $token, time() + 86400 * 30, '/', '', $secure, true);
         }
 
         $this->session->regenerate();

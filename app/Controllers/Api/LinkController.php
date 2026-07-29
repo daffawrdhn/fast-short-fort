@@ -168,6 +168,15 @@ class LinkController
         $this->api->createdResponse($link)->send();
     }
 
+    private function authorizeWorkspace(int $workspaceId, int $userId): bool
+    {
+        $stmt = \App\Core\Database::connection()->prepare(
+            'SELECT COUNT(*) FROM workspace_members WHERE workspace_id = :wid AND user_id = :uid'
+        );
+        $stmt->execute([':wid' => $workspaceId, ':uid' => $userId]);
+        return (int) $stmt->fetchColumn() > 0;
+    }
+
     public function show(Request $request, Response $response, array $params = []): void
     {
         $id = $params['id'] ?? null;
@@ -179,6 +188,12 @@ class LinkController
 
         if ($link === false) {
             $this->api->errorResponse('Link not found.', 404, 'NOT_FOUND')->send();
+            return;
+        }
+
+        $userId = (int) ($_SERVER['auth_user_id'] ?? 0);
+        if ($userId === 0 || !$this->authorizeWorkspace((int) $link['workspace_id'], $userId)) {
+            $this->api->errorResponse('Forbidden.', 403, 'FORBIDDEN')->send();
             return;
         }
 
@@ -196,6 +211,12 @@ class LinkController
 
         if ($link === false) {
             $this->api->errorResponse('Link not found.', 404, 'NOT_FOUND')->send();
+            return;
+        }
+
+        $userId = (int) ($_SERVER['auth_user_id'] ?? 0);
+        if ($userId === 0 || !$this->authorizeWorkspace((int) $link['workspace_id'], $userId)) {
+            $this->api->errorResponse('Forbidden.', 403, 'FORBIDDEN')->send();
             return;
         }
 
@@ -249,6 +270,12 @@ class LinkController
             return;
         }
 
+        $userId = (int) ($_SERVER['auth_user_id'] ?? 0);
+        if ($userId === 0 || !$this->authorizeWorkspace((int) $link['workspace_id'], $userId)) {
+            $this->api->errorResponse('Forbidden.', 403, 'FORBIDDEN')->send();
+            return;
+        }
+
         if ($hard) {
             $db->prepare('DELETE FROM clicks WHERE link_id = :id')->execute([':id' => $id]);
             $db->prepare('DELETE FROM links WHERE id = :id')->execute([':id' => $id]);
@@ -279,6 +306,12 @@ class LinkController
 
         if ($link === false) {
             $this->api->errorResponse('Link not found.', 404, 'NOT_FOUND')->send();
+            return;
+        }
+
+        $userId = (int) ($_SERVER['auth_user_id'] ?? 0);
+        if ($userId === 0 || !$this->authorizeWorkspace((int) $link['workspace_id'], $userId)) {
+            $this->api->errorResponse('Forbidden.', 403, 'FORBIDDEN')->send();
             return;
         }
 

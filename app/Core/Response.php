@@ -66,6 +66,22 @@ class Response
 
     public function send(): void
     {
+        $defaultHeaders = [
+            'X-Frame-Options' => 'SAMEORIGIN',
+            'X-Content-Type-Options' => 'nosniff',
+            'X-XSS-Protection' => '1; mode=block',
+            'Referrer-Policy' => 'strict-origin-when-cross-origin',
+            'Permissions-Policy' => 'geolocation=(), microphone=(), camera=()',
+        ];
+        if (Env::get('APP_ENV', 'production') === 'production') {
+            $defaultHeaders['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
+        }
+        foreach ($defaultHeaders as $key => $value) {
+            if (!isset($this->headers[$key])) {
+                $this->headers[$key] = $value;
+            }
+        }
+
         http_response_code($this->statusCode);
 
         foreach ($this->headers as $key => $value) {

@@ -433,6 +433,12 @@ class LinkController
             return;
         }
 
+        if (!$request->validateCsrf()) {
+            $this->session->flash('error', 'Invalid CSRF token.');
+            $response->redirect('/links');
+            return;
+        }
+
         $id = (int) ($params['id'] ?? 0);
         $link = Link::findById($id);
 
@@ -451,6 +457,12 @@ class LinkController
         $workspaceId = $this->getWorkspaceId();
         if ($workspaceId === null) {
             $response->redirect('/login');
+            return;
+        }
+
+        if (!$request->validateCsrf()) {
+            $this->session->flash('error', 'Invalid CSRF token.');
+            $response->redirect('/links');
             return;
         }
 
@@ -616,6 +628,12 @@ class LinkController
         $workspaceId = $this->getWorkspaceId();
         if ($workspaceId === null) {
             $response->redirect('/login');
+            return;
+        }
+
+        if (!$request->validateCsrf()) {
+            $this->session->flash('error', 'Invalid CSRF token.');
+            $response->redirect('/links');
             return;
         }
 
