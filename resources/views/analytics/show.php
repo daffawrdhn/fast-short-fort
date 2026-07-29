@@ -109,10 +109,9 @@
     </div>
 
     <!-- Map Visualization -->
-    <div class="bento-card bento-col-12" style="min-height:200px; display:flex; flex-direction:column; justify-content:center;">
+    <div class="bento-card bento-col-12" style="min-height:400px; display:flex; flex-direction:column; justify-content:center;">
       <h3 class="card-title" style="margin-bottom:1.5rem; font-size:1.05rem; font-weight:600;">Click Locations</h3>
-      <div id="geo-map" style="flex-grow:1; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:var(--radius); display:flex; align-items:center; justify-content:center; padding:2rem;">
-        <p class="text-muted" style="font-size:0.875rem;">Geolocation map visualization available with a map library integration (Leaflet/Google Maps).</p>
+      <div id="geo-map" style="flex-grow:1; min-height:350px; border:1px solid var(--border-color); border-radius:var(--radius); overflow:hidden; z-index:1;">
       </div>
     </div>
 
@@ -178,6 +177,8 @@
   </div>
 </div>
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -240,10 +241,50 @@ document.addEventListener('DOMContentLoaded', function() {
   );
   <?php endif; ?>
 
-  startPolling(<?= $linkId ?>);
+  // Map initialization
+  var mapEl = document.getElementById('geo-map');
+  var map, markerGroup;
+  if (mapEl) {
+    map = L.map('geo-map').setView([20, 0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    markerGroup = L.layerGroup().addTo(map);
+  }
+
+  function updateMapMarkers(clicks) {
+    if (!map || !markerGroup) return;
+    markerGroup.clearLayers();
+    var coords = [];
+    clicks.forEach(function(click) {
+      if (click.latitude && click.longitude) {
+        var lat = parseFloat(click.latitude);
+        var lon = parseFloat(click.longitude);
+        if (!isNaN(lat) && !isNaN(lon)) {
+          var popupContent = '<b>' + escapeHtml(click.city || 'Unknown') + ', ' + escapeHtml(click.country || 'Unknown') + '</b><br>' +
+                             'IP: ' + escapeHtml(click.ip_address || 'Unknown') + '<br>' +
+                             'ISP: ' + escapeHtml(click.isp || 'Unknown') + '<br>' +
+                             'Time: ' + escapeHtml(click.clicked_at);
+          var marker = L.marker([lat, lon]).bindPopup(popupContent);
+          markerGroup.addLayer(marker);
+          coords.push([lat, lon]);
+        }
+      }
+    });
+
+    if (coords.length > 0) {
+      map.fitBounds(coords, { maxZoom: 10, padding: [20, 20] });
+    }
+  }
+
+  var initialClicks = <?= json_encode($stats['recent_clicks'] ?? []) ?>;
+  updateMapMarkers(initialClicks);
+
+  startPolling(<?= $linkId ?>, initialClicks);
 });
 
-function startPolling(linkId) {
+function startPolling(linkId, allClicks) {
   var lastTime = <?= json_encode($stats['recent_clicks'][0]['clicked_at'] ?? '') ?>;
   setInterval(function() {
     var url = '/analytics/' + linkId + '/realtime';
@@ -255,6 +296,7 @@ function startPolling(linkId) {
           var tbody = document.querySelector('#recent-clicks-table tbody');
           data.data.forEach(function(click) {
             if (click.clicked_at > lastTime) lastTime = click.clicked_at;
+            allClicks.unshift(click);
             var tr = document.createElement('tr');
             tr.innerHTML = '<td style="padding-left:0;">' + escapeHtml(click.clicked_at) + '</td>' +
               '<td style="font-family:var(--font-mono); font-size:0.8rem;" title="' + escapeHtml(click.visitor_uuid || 'N/A') + '">' + escapeHtml((click.visitor_uuid || 'N/A').substring(0, 8)) + '</td>' +
@@ -274,6 +316,7 @@ function startPolling(linkId) {
               '<td style="padding-right:0;">' + (click.is_bot ? 'Yes' : 'No') + '</td>';
             tbody.insertBefore(tr, tbody.firstChild);
           });
+          updateMapMarkers(allClicks);
           document.getElementById('live-indicator').classList.add('pulse');
         }
       })

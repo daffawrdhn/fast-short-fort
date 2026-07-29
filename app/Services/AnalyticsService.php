@@ -250,7 +250,7 @@ class AnalyticsService
     public function getRecentClicks(int $linkId, int $limit = 50): array
     {
         $stmt = $this->db->prepare('
-            SELECT id, ip_hash, ip_address, country, city, device_type, browser, os, referrer, user_language, user_agent, clicked_at,
+            SELECT id, ip_hash, ip_address, country, city, latitude, longitude, device_type, browser, os, referrer, user_language, user_agent, clicked_at,
                    isp, org, connection_type, is_vpn, visitor_uuid, client_hints, dnt_status
             FROM link_clicks
             WHERE link_id = :link_id
@@ -498,25 +498,25 @@ class AnalyticsService
     public function lookupIP(string $ip): array
     {
         $default = [
-            'country' => 'Unknown',
-            'city' => 'Unknown',
+            'country' => 'Local Network',
+            'city' => 'Local Network',
             'lat' => null,
             'lon' => null,
-            'isp' => null,
-            'org' => null,
-            'connection_type' => null,
+            'isp' => 'Local ISP',
+            'org' => 'Local Org',
+            'connection_type' => 'Local',
             'is_vpn' => 0
         ];
 
         $cacheFile = $this->cachePath . '/' . hash('sha256', $ip) . '.json';
         if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < 86400) {
             $cached = json_decode(file_get_contents($cacheFile), true);
-            if (is_array($cached)) {
+            if (is_array($cached) && array_key_exists('isp', $cached)) {
                 return $cached;
             }
         }
 
-        if (in_array($ip, ['127.0.0.1', '::1', 'localhost'], true)) {
+        if (in_array($ip, ['127.0.0.1', '::1', 'localhost'], true) || str_starts_with($ip, '192.168.') || str_starts_with($ip, '10.')) {
             return $default;
         }
 
@@ -535,8 +535,8 @@ class AnalyticsService
                         'city' => $data['city'] ?? 'Unknown',
                         'lat' => $data['lat'] ?? null,
                         'lon' => $data['lon'] ?? null,
-                        'isp' => $data['isp'] ?? null,
-                        'org' => $data['org'] ?? null,
+                        'isp' => $data['isp'] ?? 'Unknown',
+                        'org' => $data['org'] ?? 'Unknown',
                         'connection_type' => $connectionType,
                         'is_vpn' => $isVpn
                     ];
