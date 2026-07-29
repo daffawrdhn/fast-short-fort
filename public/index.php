@@ -67,7 +67,7 @@ $router->get('/qrcode', function (Request $req, Response $res) {
         $res->status(400)->body('URL is required.');
         return;
     }
-    $renderer = new \BaconQrCode\Renderer\Image\ImageRenderer(
+    $renderer = new \BaconQrCode\Renderer\ImageRenderer(
         new \BaconQrCode\Renderer\RendererStyle\RendererStyle(300),
         new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
     );
