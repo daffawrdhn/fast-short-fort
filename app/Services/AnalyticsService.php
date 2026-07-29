@@ -424,6 +424,56 @@ class AnalyticsService
         return $result;
     }
 
+    public function exportWorkspaceAnalytics(int $workspaceId, string $format = 'csv', ?string $startDate = null, ?string $endDate = null): string
+    {
+        if ($startDate !== null && !strtotime($startDate)) {
+            $startDate = null;
+        }
+        if ($endDate !== null && !strtotime($endDate)) {
+            $endDate = null;
+        }
+
+        $params = [':workspace_id' => $workspaceId];
+        $dateJoin = '';
+
+        if ($startDate && $endDate) {
+            $dateJoin = 'AND lc.clicked_at >= :start_date AND lc.clicked_at <= :end_date';
+            $params[':start_date'] = $startDate . ' 00:00:00';
+            $params[':end_date'] = $endDate . ' 23:59:59';
+        } elseif ($startDate) {
+            $dateJoin = 'AND lc.clicked_at >= :start_date';
+            $params[':start_date'] = $startDate . ' 00:00:00';
+        } elseif ($endDate) {
+            $dateJoin = 'AND lc.clicked_at <= :end_date';
+            $params[':end_date'] = $endDate . ' 23:59:59';
+        }
+
+        $stmt = $this->db->prepare("
+            SELECT l.slug, lc.ip_hash, lc.country, lc.city, lc.latitude, lc.longitude,
+                   lc.device_type, lc.browser, lc.browser_version, lc.os, lc.referrer, lc.clicked_at
+            FROM link_clicks lc
+            JOIN links l ON l.id = lc.link_id
+            WHERE l.workspace_id = :workspace_id {$dateJoin}
+            ORDER BY lc.clicked_at DESC
+        ");
+        $stmt->execute($params);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if ($format === 'json') {
+            return json_encode($rows, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        }
+
+        $csv = fopen('php://temp', 'r+');
+        fputcsv($csv, array_keys($rows[0] ?? ['Slug', 'IP Hash', 'Country', 'City', 'Latitude', 'Longitude', 'Device Type', 'Browser', 'Browser Version', 'OS', 'Referrer', 'Clicked At']));
+        foreach ($rows as $row) {
+            fputcsv($csv, $row);
+        }
+        rewind($csv);
+        $output = stream_get_contents($csv);
+        fclose($csv);
+        return $output;
+    }
+
     private function buildDateFilter(int $linkId, ?string $startDate = null, ?string $endDate = null): array
     {
         if ($startDate !== null && !strtotime($startDate)) {

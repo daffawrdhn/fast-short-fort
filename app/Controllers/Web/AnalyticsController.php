@@ -8,6 +8,8 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Core\View;
 use App\Services\AnalyticsService;
+use App\Core\Logger;
+use App\Models\Workspace;
 
 class AnalyticsController
 {
@@ -20,11 +22,34 @@ class AnalyticsController
         $this->view = View::getInstance();
     }
 
+    private function getWorkspaceId(): ?int
+    {
+        $ws = session()->get('workspace_id');
+        if ($ws === null) {
+            $user = session()->get('user_id');
+            if ($user !== null) {
+                $workspaces = Workspace::findByOwner((int) $user);
+                if (!empty($workspaces)) {
+                    session()->set('workspace_id', $workspaces[0]->id);
+                    return $workspaces[0]->id;
+                }
+            }
+        }
+        return $ws ? (int) $ws : null;
+    }
+
     public function index(Request $request, Response $response, array $params = []): void
     {
+        $workspaceId = $request->query('workspace_id', '');
+        if ($workspaceId === '') {
+            $resolvedId = $this->getWorkspaceId();
+            if ($resolvedId !== null) {
+                $workspaceId = (string) $resolvedId;
+            }
+        }
+
         $startDate = $request->query('start_date', date('Y-m-d', strtotime('-30 days')));
         $endDate = $request->query('end_date', date('Y-m-d'));
-        $workspaceId = $request->query('workspace_id', '');
 
         if ($workspaceId && is_numeric($workspaceId)) {
             $stats = $this->analytics->getWorkspaceStats((int) $workspaceId, $startDate . ' 00:00:00', $endDate . ' 23:59:59');
@@ -54,7 +79,7 @@ class AnalyticsController
 
     public function show(Request $request, Response $response, array $params = []): void
     {
-        $linkId = (int) ($params['id'] ?? 0);
+        $linkId = (int) ($params['linkId'] ?? $params['id'] ?? 0);
         if ($linkId <= 0) {
             $response->status(404)->view('errors.404');
             return;
@@ -81,7 +106,7 @@ class AnalyticsController
 
     public function realtime(Request $request, Response $response, array $params = []): void
     {
-        $linkId = (int) ($params['id'] ?? 0);
+        $linkId = (int) ($params['linkId'] ?? $params['id'] ?? 0);
         $since = $request->query('since', '');
 
         $stmt = \App\Core\Database::connection()->prepare('
@@ -99,5 +124,68 @@ class AnalyticsController
         $clicks = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $response->json(['success' => true, 'data' => $clicks]);
+    }
+
+    public function exportWorkspace(Request $request, Response $response): void
+    {
+        $workspaceId = $request->query('workspace_id', '');
+        if ($workspaceId === '') {
+            $resolvedId = $this->getWorkspaceId();
+            if ($resolvedId !== null) {
+                $workspaceId = (string) $resolvedId;
+            }
+        }
+
+        if (!$workspaceId || !is_numeric($workspaceId)) {
+            $response->redirect('/analytics');
+            return;
+        }
+
+        $format = $request->query('export', 'csv');
+        $startDate = $request->query('start_date', null);
+        $endDate = $request->query('end_date', null);
+
+        try {
+            $output = $this->analytics->exportWorkspaceAnalytics((int) $workspaceId, $format, $startDate, $endDate);
+            if ($format === 'json') {
+                $response->header('Content-Type', 'application/json; charset=utf-8');
+                $response->header('Content-Disposition', 'attachment; filename="workspace-' . $workspaceId . '-analytics.json"');
+            } else {
+                $response->header('Content-Type', 'text/csv; charset=utf-8');
+                $response->header('Content-Disposition', 'attachment; filename="workspace-' . $workspaceId . '-analytics.csv"');
+            }
+            $response->body($output);
+        } catch (\Throwable $e) {
+            Logger::error('Failed to export workspace analytics: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            $response->redirect('/analytics');
+        }
+    }
+
+    public function exportLink(Request $request, Response $response, array $params = []): void
+    {
+        $linkId = (int) ($params['linkId'] ?? $params['id'] ?? 0);
+        if ($linkId <= 0) {
+            $response->status(404)->view('errors.404');
+            return;
+        }
+
+        $format = $request->query('format', 'csv');
+        $startDate = $request->query('start_date', null);
+        $endDate = $request->query('end_date', null);
+
+        try {
+            $output = $this->analytics->exportAnalytics($linkId, $format, $startDate, $endDate);
+            if ($format === 'json') {
+                $response->header('Content-Type', 'application/json; charset=utf-8');
+                $response->header('Content-Disposition', 'attachment; filename="link-' . $linkId . '-analytics.json"');
+            } else {
+                $response->header('Content-Type', 'text/csv; charset=utf-8');
+                $response->header('Content-Disposition', 'attachment; filename="link-' . $linkId . '-analytics.csv"');
+            }
+            $response->body($output);
+        } catch (\Throwable $e) {
+            Logger::error('Failed to export link analytics: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            $response->redirect('/analytics/' . $linkId);
+        }
     }
 }

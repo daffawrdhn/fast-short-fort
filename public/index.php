@@ -124,7 +124,9 @@ $router->group('', function (Router $router) {
     $router->post('/links/bulk/disable', [\App\Controllers\Web\LinkController::class, 'bulkDisable']);
     $router->get('/links/bulk/export/{format}', [\App\Controllers\Web\LinkController::class, 'bulkExport']);
     $router->get('/analytics', [\App\Controllers\Web\AnalyticsController::class, 'index'])->name('analytics');
+    $router->get('/analytics/export', [\App\Controllers\Web\AnalyticsController::class, 'exportWorkspace']);
     $router->get('/analytics/{linkId}', [\App\Controllers\Web\AnalyticsController::class, 'show'])->name('analytics.show');
+    $router->get('/analytics/{linkId}/export', [\App\Controllers\Web\AnalyticsController::class, 'exportLink']);
     $router->get('/analytics/{linkId}/realtime', [\App\Controllers\Web\AnalyticsController::class, 'realtime']);
     $router->get('/profile', [\App\Controllers\Web\ProfileController::class, 'index'])->name('profile');
     $router->post('/profile', [\App\Controllers\Web\ProfileController::class, 'update']);
