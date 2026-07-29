@@ -13,7 +13,7 @@ class View
     private string $extension = '.php';
     private array $sections = [];
     private ?string $currentSection = null;
-    private string $layoutContent = '';
+    private ?string $layoutFile = null;
 
     private function __construct()
     {
@@ -43,7 +43,7 @@ class View
     public function renderString(string $template, array $data = []): string
     {
         $this->sections = [];
-        $this->layoutContent = '';
+        $this->layoutFile = null;
 
         $file = $this->basePath . '/' . str_replace('.', '/', $template) . $this->extension;
 
@@ -56,8 +56,12 @@ class View
         include $file;
         $content = ob_get_clean();
 
-        if (!empty($this->layoutContent)) {
-            $content = str_replace('@content', $content, $this->layoutContent);
+        if ($this->layoutFile !== null) {
+            $data['content'] = $content;
+            extract($data, EXTR_SKIP);
+            ob_start();
+            include $this->layoutFile;
+            $content = ob_get_clean();
         }
 
         return $content;
@@ -71,9 +75,7 @@ class View
             $file = $this->basePath . '/' . $layoutPath . $this->extension;
         }
 
-        ob_start();
-        include $file;
-        $this->layoutContent = ob_get_clean();
+        $this->layoutFile = $file;
     }
 
     public function section(string $name): void
