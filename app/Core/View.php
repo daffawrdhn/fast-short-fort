@@ -65,9 +65,10 @@ class View
 
     public function extend(string $layout): void
     {
-        $file = $this->basePath . '/layouts/' . $layout . $this->extension;
+        $layoutPath = str_replace('.', '/', $layout);
+        $file = $this->basePath . '/layouts/' . $layoutPath . $this->extension;
         if (!file_exists($file)) {
-            $file = $this->basePath . '/' . $layout . $this->extension;
+            $file = $this->basePath . '/' . $layoutPath . $this->extension;
         }
 
         ob_start();
