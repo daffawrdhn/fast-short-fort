@@ -33,7 +33,10 @@ class AnalyticsService
         $referrer = $request->header('Referer', '');
 
         $geoEnabled = Env::get('FEATURE_GEOLOCATION', 'true') === 'true';
-        $geo = $geoEnabled ? $this->lookupIP($ip) : ['country' => null, 'city' => null, 'lat' => null, 'lon' => null];
+        $geo = $geoEnabled ? $this->lookupIP($ip) : [
+            'country' => null, 'city' => null, 'lat' => null, 'lon' => null,
+            'isp' => null, 'org' => null, 'connection_type' => null, 'is_vpn' => 0
+        ];
 
         $acceptLang = $request->header('Accept-Language', '');
         $lang = 'Unknown';
@@ -45,13 +48,36 @@ class AnalyticsService
             }
         }
 
+        $visitorUuid = $_COOKIE['visitor_uuid'] ?? null;
+        if ($visitorUuid === null) {
+            $visitorUuid = $this->generateUuid();
+            setcookie('visitor_uuid', $visitorUuid, [
+                'expires' => time() + 31536000,
+                'path' => '/',
+                'secure' => true,
+                'httponly' => true,
+                'samesite' => 'Lax'
+            ]);
+        }
+
+        $clientHints = [
+            'sec_ch_ua' => $_SERVER['HTTP_SEC_CH_UA'] ?? null,
+            'sec_ch_ua_platform' => $_SERVER['HTTP_SEC_CH_UA_PLATFORM'] ?? null,
+            'sec_ch_ua_mobile' => $_SERVER['HTTP_SEC_CH_UA_MOBILE'] ?? null,
+        ];
+        $clientHintsJson = json_encode($clientHints);
+
+        $dntStatus = isset($_SERVER['HTTP_DNT']) && $_SERVER['HTTP_DNT'] === '1' ? 1 : 0;
+
         $stmt = $this->db->prepare('
             INSERT INTO link_clicks
                 (link_id, ip_hash, ip_address, country, city, latitude, longitude,
-                 device_type, browser, browser_version, os, referrer, user_agent, user_language, clicked_at)
+                 device_type, browser, browser_version, os, referrer, user_agent, user_language,
+                 isp, org, connection_type, is_vpn, visitor_uuid, client_hints, dnt_status, clicked_at)
             VALUES
                 (:link_id, :ip_hash, :ip_address, :country, :city, :latitude, :longitude,
-                 :device_type, :browser, :browser_version, :os, :referrer, :user_agent, :user_language, CURRENT_TIMESTAMP)
+                 :device_type, :browser, :browser_version, :os, :referrer, :user_agent, :user_language,
+                 :isp, :org, :connection_type, :is_vpn, :visitor_uuid, :client_hints, :dnt_status, CURRENT_TIMESTAMP)
         ');
 
         $stmt->execute([
@@ -69,6 +95,13 @@ class AnalyticsService
             ':referrer'        => $referrer,
             ':user_agent'      => $userAgent,
             ':user_language'   => $lang,
+            ':isp'             => $geo['isp'],
+            ':org'             => $geo['org'],
+            ':connection_type' => $geo['connection_type'],
+            ':is_vpn'          => $geo['is_vpn'],
+            ':visitor_uuid'    => $visitorUuid,
+            ':client_hints'    => $clientHintsJson,
+            ':dnt_status'      => $dntStatus,
         ]);
     }
 
@@ -217,7 +250,8 @@ class AnalyticsService
     public function getRecentClicks(int $linkId, int $limit = 50): array
     {
         $stmt = $this->db->prepare('
-            SELECT id, ip_hash, ip_address, country, city, device_type, browser, os, referrer, user_language, user_agent, clicked_at
+            SELECT id, ip_hash, ip_address, country, city, device_type, browser, os, referrer, user_language, user_agent, clicked_at,
+                   isp, org, connection_type, is_vpn, visitor_uuid, client_hints, dnt_status
             FROM link_clicks
             WHERE link_id = :link_id
             ORDER BY clicked_at DESC
@@ -463,7 +497,16 @@ class AnalyticsService
 
     public function lookupIP(string $ip): array
     {
-        $default = ['country' => 'Unknown', 'city' => 'Unknown', 'lat' => null, 'lon' => null];
+        $default = [
+            'country' => 'Unknown',
+            'city' => 'Unknown',
+            'lat' => null,
+            'lon' => null,
+            'isp' => null,
+            'org' => null,
+            'connection_type' => null,
+            'is_vpn' => 0
+        ];
 
         $cacheFile = $this->cachePath . '/' . hash('sha256', $ip) . '.json';
         if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < 86400) {
@@ -478,18 +521,24 @@ class AnalyticsService
         }
 
         try {
-            $response = @file_get_contents("http://ip-api.com/json/{$ip}?fields=country,city,lat,lon", false, stream_context_create([
+            $response = @file_get_contents("http://ip-api.com/json/{$ip}?fields=status,message,country,city,lat,lon,isp,org,mobile,proxy,hosting", false, stream_context_create([
                 'http' => ['timeout' => 3, 'method' => 'GET'],
             ]));
 
             if ($response !== false) {
                 $data = json_decode($response, true);
-                if (is_array($data) && !empty($data['country'])) {
+                if (is_array($data) && ($data['status'] ?? '') === 'success') {
+                    $isVpn = (!empty($data['proxy']) || !empty($data['hosting'])) ? 1 : 0;
+                    $connectionType = !empty($data['mobile']) ? 'Mobile' : 'Broadband';
                     $result = [
                         'country' => $data['country'] ?? 'Unknown',
                         'city' => $data['city'] ?? 'Unknown',
                         'lat' => $data['lat'] ?? null,
                         'lon' => $data['lon'] ?? null,
+                        'isp' => $data['isp'] ?? null,
+                        'org' => $data['org'] ?? null,
+                        'connection_type' => $connectionType,
+                        'is_vpn' => $isVpn
                     ];
                     file_put_contents($cacheFile, json_encode($result));
                     return $result;
@@ -499,6 +548,14 @@ class AnalyticsService
         }
 
         return $default;
+    }
+
+    private function generateUuid(): string
+    {
+        $data = random_bytes(16);
+        $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
+        $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
 
     public function parseUserAgent(string $userAgent): array

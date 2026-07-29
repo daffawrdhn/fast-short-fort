@@ -1,0 +1,7 @@
+ALTER TABLE link_clicks ADD COLUMN isp VARCHAR(255) NULL;
+ALTER TABLE link_clicks ADD COLUMN org VARCHAR(255) NULL;
+ALTER TABLE link_clicks ADD COLUMN connection_type VARCHAR(50) NULL;
+ALTER TABLE link_clicks ADD COLUMN is_vpn INTEGER DEFAULT 0;
+ALTER TABLE link_clicks ADD COLUMN visitor_uuid VARCHAR(36) NULL;
+ALTER TABLE link_clicks ADD COLUMN client_hints TEXT NULL;
+ALTER TABLE link_clicks ADD COLUMN dnt_status INTEGER DEFAULT 0;

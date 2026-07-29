@@ -133,9 +133,14 @@
             <thead>
               <tr>
                 <th>Time</th>
+                <th>Visitor ID</th>
                 <th>IP Address</th>
                 <th>Country</th>
                 <th>Lang</th>
+                <th>ISP</th>
+                <th>Conn</th>
+                <th>VPN</th>
+                <th>DNT</th>
                 <th>Device</th>
                 <th>Browser</th>
                 <th>OS</th>
@@ -147,9 +152,14 @@
               <?php foreach ($recentClicks as $click): ?>
               <tr>
                 <td><?= $this->escape(date('Y-m-d H:i', strtotime($click['clicked_at']))) ?></td>
+                <td style="font-family: monospace; font-size: 0.8rem;" title="<?= $this->escape($click['visitor_uuid'] ?? 'N/A') ?>"><?= $this->escape(substr($click['visitor_uuid'] ?? 'N/A', 0, 8)) ?></td>
                 <td style="font-family: monospace; font-size: 0.875rem;"><?= $this->escape($click['ip_address'] ?? ($click['ip_hash'] ? substr($click['ip_hash'], 0, 8) . '...' : 'Unknown')) ?></td>
                 <td><?= $this->escape($click['country'] ?? 'Unknown') ?></td>
                 <td><span class="badge badge-secondary" style="text-transform: uppercase;"><?= $this->escape($click['user_language'] ?? 'Unknown') ?></span></td>
+                <td><?= $this->escape($click['isp'] ?? 'Unknown') ?></td>
+                <td><?= $this->escape($click['connection_type'] ?? 'Unknown') ?></td>
+                <td><?= ($click['is_vpn'] ?? 0) ? '<span class="badge" style="background-color:#ef4444; color:white;">VPN</span>' : '<span class="badge" style="background-color:#6b7280; color:white;">No</span>' ?></td>
+                <td><?= ($click['dnt_status'] ?? 0) ? '<span class="badge" style="background-color:#f59e0b; color:white;">Active</span>' : '<span class="badge" style="background-color:#6b7280; color:white;">Off</span>' ?></td>
                 <td><?= $this->escape($click['device_type'] ?? 'Unknown') ?></td>
                 <td><?= $this->escape($click['browser'] ?? 'Unknown') ?></td>
                 <td><?= $this->escape($click['os'] ?? 'Unknown') ?></td>

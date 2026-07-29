@@ -128,15 +128,21 @@
             <thead>
               <tr>
                 <th style="padding-left:0;">Time</th>
+                <th>Visitor ID</th>
                 <th>IP Address</th>
                 <th>Country</th>
                 <th>City</th>
                 <th>Lang</th>
+                <th>ISP</th>
+                <th>Conn</th>
+                <th>VPN</th>
+                <th>DNT</th>
                 <th>Device</th>
                 <th>Browser</th>
                 <th>OS</th>
                 <th>User Agent</th>
-                <th style="padding-right:0;">Referrer</th>
+                <th>Referrer</th>
+                <th style="padding-right:0;">Bot</th>
               </tr>
             </thead>
             <tbody>
@@ -144,19 +150,25 @@
               <?php foreach ($stats['recent_clicks'] as $click): ?>
               <tr>
                 <td style="padding-left:0;"><?= htmlspecialchars($click['clicked_at'], ENT_QUOTES, 'UTF-8') ?></td>
+                <td style="font-family:var(--font-mono); font-size:0.8rem;" title="<?= htmlspecialchars($click['visitor_uuid'] ?? 'N/A', ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars(substr($click['visitor_uuid'] ?? 'N/A', 0, 8), ENT_QUOTES, 'UTF-8') ?></td>
                 <td style="font-family:var(--font-mono); font-size:0.875rem;"><?= htmlspecialchars($click['ip_address'] ?? ($click['ip_hash'] ? substr($click['ip_hash'], 0, 8) . '...' : 'Unknown'), ENT_QUOTES, 'UTF-8') ?></td>
                 <td><?= htmlspecialchars($click['country'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></td>
                 <td><?= htmlspecialchars($click['city'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></td>
                 <td><span class="badge badge-secondary" style="text-transform:uppercase;"><?= htmlspecialchars($click['user_language'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></span></td>
+                <td><?= htmlspecialchars($click['isp'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></td>
+                <td><?= htmlspecialchars($click['connection_type'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></td>
+                <td><?= ($click['is_vpn'] ?? 0) ? '<span class="badge" style="background-color:#ef4444; color:white;">VPN</span>' : '<span class="badge" style="background-color:#6b7280; color:white;">No</span>' ?></td>
+                <td><?= ($click['dnt_status'] ?? 0) ? '<span class="badge" style="background-color:#f59e0b; color:white;">Active</span>' : '<span class="badge" style="background-color:#6b7280; color:white;">Off</span>' ?></td>
                 <td><?= htmlspecialchars($click['device_type'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></td>
                 <td><?= htmlspecialchars($click['browser'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></td>
                 <td><?= htmlspecialchars($click['os'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></td>
                 <td><span class="truncate-text" title="<?= htmlspecialchars($click['user_agent'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?>" style="max-width:180px; display:inline-block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($click['user_agent'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') ?></span></td>
-                <td class="url-cell" style="padding-right:0;"><span class="truncate-text" title="<?= htmlspecialchars($click['referrer'] ?? 'Direct', ENT_QUOTES, 'UTF-8') ?>" style="max-width:150px; display:inline-block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($click['referrer'] ?? 'Direct', ENT_QUOTES, 'UTF-8') ?></span></td>
+                <td><span class="truncate-text" title="<?= htmlspecialchars($click['referrer'] ?? 'Direct', ENT_QUOTES, 'UTF-8') ?>" style="max-width:150px; display:inline-block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($click['referrer'] ?? 'Direct', ENT_QUOTES, 'UTF-8') ?></span></td>
+                <td style="padding-right:0;"><?= $click['is_bot'] ? 'Yes' : 'No' ?></td>
               </tr>
               <?php endforeach; ?>
               <?php else: ?>
-              <tr><td colspan="10" class="empty-state" style="text-align:center; padding:2rem 0;">No clicks recorded yet.</td></tr>
+              <tr><td colspan="16" class="empty-state" style="text-align:center; padding:2rem 0;">No clicks recorded yet.</td></tr>
               <?php endif; ?>
             </tbody>
           </table>
@@ -245,15 +257,21 @@ function startPolling(linkId) {
             if (click.clicked_at > lastTime) lastTime = click.clicked_at;
             var tr = document.createElement('tr');
             tr.innerHTML = '<td style="padding-left:0;">' + escapeHtml(click.clicked_at) + '</td>' +
+              '<td style="font-family:var(--font-mono); font-size:0.8rem;" title="' + escapeHtml(click.visitor_uuid || 'N/A') + '">' + escapeHtml((click.visitor_uuid || 'N/A').substring(0, 8)) + '</td>' +
               '<td style="font-family:var(--font-mono); font-size:0.875rem;">' + escapeHtml(click.ip_address || (click.ip_hash ? click.ip_hash.substring(0, 8) + '...' : 'Unknown')) + '</td>' +
               '<td>' + escapeHtml(click.country || 'Unknown') + '</td>' +
               '<td>' + escapeHtml(click.city || 'Unknown') + '</td>' +
               '<td><span class="badge badge-secondary" style="text-transform:uppercase;">' + escapeHtml(click.user_language || 'Unknown') + '</span></td>' +
+              '<td>' + escapeHtml(click.isp || 'Unknown') + '</td>' +
+              '<td>' + escapeHtml(click.connection_type || 'Unknown') + '</td>' +
+              '<td>' + (click.is_vpn ? '<span class="badge" style="background-color:#ef4444; color:white;">VPN</span>' : '<span class="badge" style="background-color:#6b7280; color:white;">No</span>') + '</td>' +
+              '<td>' + (click.dnt_status ? '<span class="badge" style="background-color:#f59e0b; color:white;">Active</span>' : '<span class="badge" style="background-color:#6b7280; color:white;">Off</span>') + '</td>' +
               '<td>' + escapeHtml(click.device_type || 'Unknown') + '</td>' +
               '<td>' + escapeHtml(click.browser || 'Unknown') + '</td>' +
               '<td>' + escapeHtml(click.os || 'Unknown') + '</td>' +
               '<td><span class="truncate-text" title="' + escapeHtml(click.user_agent || 'Unknown') + '" style="max-width:180px; display:inline-block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escapeHtml(click.user_agent || 'Unknown') + '</span></td>' +
-              '<td class="url-cell" style="padding-right:0;"><span class="truncate-text" title="' + escapeHtml(click.referrer || 'Direct') + '" style="max-width:150px; display:inline-block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escapeHtml(click.referrer || 'Direct') + '</span></td>';
+              '<td><span class="truncate-text" title="' + escapeHtml(click.referrer || 'Direct') + '" style="max-width:150px; display:inline-block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escapeHtml(click.referrer || 'Direct') + '</span></td>' +
+              '<td style="padding-right:0;">' + (click.is_bot ? 'Yes' : 'No') + '</td>';
             tbody.insertBefore(tr, tbody.firstChild);
           });
           document.getElementById('live-indicator').classList.add('pulse');
