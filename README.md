@@ -14,6 +14,7 @@ Built with **Native PHP 8.2+** — no heavy frameworks. Self-host on shared host
 
 ### Core
 - Shorten URLs with custom aliases or random slugs
+- Auto-prepend `https://` prefix for user convenience if scheme is missing
 - QR code generation (PNG/SVG) for every link
 - Password-protected links
 - Link expiration & click limits
@@ -45,17 +46,20 @@ Built with **Native PHP 8.2+** — no heavy frameworks. Self-host on shared host
 
 ### Analytics
 - Total & unique clicks
-- Geolocation (country/city)
+- Geolocation (country/city) with automatic fallback IP lookup enabled by default
 - Device, browser, OS breakdown
+- User preferred language tracking (parsed from browser `Accept-Language` headers) with visual pie charts
+- Raw IP Address logging (saved to `ip_address` column)
 - Referrer tracking
 - Time-series charts (hourly/daily/monthly)
-- Real-time click feed (polling)
-- CSV export
+- Real-time click feed (polling) with detailed IP and Language logs
+- CSV/JSON exports (both for individual links and workspace-wide metrics)
 
 ### Teams
-- Multi-workspace
+- Fully functional multi-workspace switcher dashboard
 - Role-based access (Owner, Admin, Editor, Viewer)
-- Invite members via email
+- Invite members via email with role configuration
+- Revoke member access instantly
 - Audit log per workspace
 
 ### REST API
